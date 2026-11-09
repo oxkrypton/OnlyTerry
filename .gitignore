@@ -1,0 +1,11 @@
+dist/
+.workbuddy/
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+*.tmp
+.venv/
+.DS_Store
+/mock

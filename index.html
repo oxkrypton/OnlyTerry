@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#f6f7f9">
+<title>发言归档</title>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f6f7f9; --surface: #ffffff; --border: #e3e6ea;
+    --text: #1f2328; --muted: #6b7280; --subtle: #4b5563;
+    --chip: #eceff3; --chip-hover: #e2e6eb; --chip-active: #ffffff;
+    --accent: #0969da; --shadow: 0 1px 2px rgba(16,22,26,.10);
+    --ctx-bg: #f3f5f7; --ctx-border: #c8ced6;
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0d1117; --surface: #161b22; --border: #30363d;
+    --text: #e6edf3; --muted: #8b949e; --subtle: #b1bac4;
+    --chip: #21262d; --chip-hover: #30363d; --chip-active: #2d333b;
+    --accent: #58a6ff; --shadow: 0 1px 2px rgba(0,0,0,.45);
+    --ctx-bg: #1c2128; --ctx-border: #484f58;
+  }
+  [hidden] { display:none !important; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif; }
+  main { max-width:760px; margin:0 auto; padding:32px 20px 80px; }
+  header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; border-bottom:1px solid var(--border); padding-bottom:16px; margin-bottom:8px; }
+  .head-main { min-width:0; }
+  h1 { font-size:20px; margin:0; font-weight:650; word-break:break-word; }
+  .meta { color:var(--muted); font-size:13px; }
+  .controls { display:inline-flex; align-items:center; gap:8px; flex-shrink:0; }
+  .lang { display:inline-flex; gap:3px; padding:3px; background:var(--chip); border:1px solid var(--border); border-radius:9px; }
+  .lang button { border:0; background:transparent; color:var(--muted); font:inherit; font-size:12px; line-height:1.5; padding:3px 10px; border-radius:6px; cursor:pointer; }
+  .lang button:hover { color:var(--text); background:var(--chip-hover); }
+  .lang button[aria-pressed="true"] { background:var(--chip-active); color:var(--accent); box-shadow:var(--shadow); font-weight:650; }
+  .lang button:focus-visible, .icon-btn:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+  .icon-btn { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; padding:0; border:1px solid var(--border); border-radius:9px; background:var(--chip); color:var(--muted); cursor:pointer; }
+  .icon-btn:hover { color:var(--text); background:var(--chip-hover); }
+  .icon-btn svg { width:16px; height:16px; display:block; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px; margin:14px 0; }
+  .date { color:var(--muted); font-size:12px; font-variant-numeric:tabular-nums; }
+  /* 消息正文保持 Telegram 原文，不做简繁转换 / 字体替换 */
+  .text { white-space:pre-wrap; word-break:break-word; margin-top:8px; }
+  .ctx { margin-top:12px; padding:8px 12px; background:var(--ctx-bg); border-left:3px solid var(--ctx-border); border-radius:4px; color:var(--subtle); font-size:13px; white-space:pre-wrap; word-break:break-word; }
+  img { max-width:100%; border-radius:8px; margin-top:12px; display:block; }
+  a.file { display:inline-block; margin-top:12px; font-size:13px; color:var(--accent); }
+  #status { color:var(--muted); padding:24px 0; }
+  @media (prefers-reduced-motion: no-preference) {
+    body, .card, .lang button, .icon-btn { transition:background-color .18s ease, color .18s ease, border-color .18s ease; }
+  }
+</style>
+<script>
+/* 首次绘制前定好主题，避免深色模式闪白 */
+(function () {
+  var saved = null;
+  try { saved = localStorage.getItem('tg-archive-theme'); } catch (e) {}
+  var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  var t = (saved === 'light' || saved === 'dark') ? saved : (dark ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', t);
+})();
+</script>
+</head>
+<body>
+<main>
+  <header>
+    <div class="head-main">
+      <h1 id="title">发言归档</h1>
+      <span class="meta" id="meta"></span>
+    </div>
+    <div class="controls">
+      <div class="lang" id="lang" role="group" aria-label="语言"></div>
+      <button class="icon-btn" id="themeBtn" type="button" data-lucide="moon" aria-pressed="false"></button>
+    </div>
+  </header>
+  <div id="status">加载中…</div>
+  <div id="list"></div>
+</main>
+<script>
+(function () {
+  'use strict';
+  var FALLBACK = 'zh-CN';
+  var STORE_KEY = 'tg-archive-lang';
+  var THEME_KEY = 'tg-archive-theme';
+  var state = { cfg: null, data: null, lang: FALLBACK, failed: null };
+  var themeReady = false;
+
+  /* Lucide Icons (ISC License) — sun / moon 图标内联，零 CDN 依赖，离线预览也能显示 */
+  var ICONS = {
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/>' +
+         '<path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/>' +
+         '<path d="M2 12h2"/><path d="M20 12h2"/>' +
+         '<path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
+    moon: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
+  };
+  function iconSvg(name) {
+    // 以 HTML 片段插入，浏览器自动把 <svg> 放进 SVG 命名空间
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+           'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ' +
+           'aria-hidden="true">' + ICONS[name] + '</svg>';
+  }
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = String(text);
+    return n;
+  }
+  function get(id) { return document.getElementById(id); }
+  function locales() { return (state.cfg && state.cfg.locales) || ['zh-CN', 'zh-TW', 'en']; }
+  function valid(l, cfg) {
+    return !!cfg && !!cfg.strings && !!cfg.strings[l] &&
+           (cfg.locales || []).indexOf(l) >= 0;
+  }
+  function pick(pref, cfg) {
+    if (valid(pref, cfg)) return pref;
+    var d = (cfg && cfg.default) || FALLBACK;
+    return valid(d, cfg) ? d : (cfg && cfg.locales ? cfg.locales[0] : FALLBACK);
+  }
+  function t(key, vars) {
+    var pack = (state.cfg && state.cfg.strings && state.cfg.strings[state.lang]) || {};
+    var s = pack[key];
+    if (s == null && state.cfg && state.cfg.strings) {
+      s = (state.cfg.strings[FALLBACK] || {})[key];
+    }
+    if (s == null) s = key;
+    if (vars) Object.keys(vars).forEach(function (k) {
+      s = s.split('{' + k + '}').join(String(vars[k]));
+    });
+    return s;
+  }
+  function readSaved() { try { return localStorage.getItem(STORE_KEY); } catch (e) { return null; } }
+  function save(l) { try { localStorage.setItem(STORE_KEY, l); } catch (e) {} }
+  function detect(cfg) {
+    var saved = readSaved();
+    if (valid(saved, cfg)) return saved;
+    var nav = String(navigator.language || navigator.userLanguage || '').toLowerCase();
+    if (/hant|-(tw|hk|mo)\b/.test(nav)) return pick('zh-TW', cfg);
+    if (/^zh/.test(nav)) return pick('zh-CN', cfg);
+    if (/^en/.test(nav)) return pick('en', cfg);
+    return pick(null, cfg);
+  }
+
+  /* ---------- 主题 ---------- */
+  function readTheme() { try { return localStorage.getItem(THEME_KEY); } catch (e) { return null; } }
+  function saveTheme(v) { try { localStorage.setItem(THEME_KEY, v); } catch (e) {} }
+  function systemDark() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }
+  function currentTheme() {
+    var s = readTheme();
+    return (s === 'light' || s === 'dark') ? s : (systemDark() ? 'dark' : 'light');
+  }
+  function isDark() { return document.documentElement.getAttribute('data-theme') === 'dark'; }
+  function updateThemeLabel() {
+    var btn = get('themeBtn');
+    var dark = isDark();
+    var label = state.cfg ? t(dark ? 'themeToLight' : 'themeToDark')
+                          : (dark ? 'Switch to light theme' : 'Switch to dark theme');
+    btn.setAttribute('aria-label', label);
+    btn.setAttribute('title', label);
+    btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+  }
+  function applyTheme(value) {
+    document.documentElement.setAttribute('data-theme', value);
+    var btn = get('themeBtn');
+    var name = value === 'dark' ? 'sun' : 'moon';  // 图标表示「点一下会切到的模式」
+    btn.setAttribute('data-lucide', name);
+    btn.innerHTML = iconSvg(name);
+    var mc = document.querySelector('meta[name="theme-color"]');
+    if (mc) mc.setAttribute('content', value === 'dark' ? '#0d1117' : '#f6f7f9');
+    updateThemeLabel();
+  }
+  function initThemeButton() {
+    if (themeReady) { updateThemeLabel(); return; }
+    themeReady = true;
+    get('themeBtn').addEventListener('click', function () {
+      var next = isDark() ? 'light' : 'dark';
+      saveTheme(next);
+      applyTheme(next);
+    });
+    applyTheme(currentTheme());
+    // 未手动锁定时，跟随系统主题变化
+    if (window.matchMedia) {
+      var mq = window.matchMedia('(prefers-color-scheme: dark)');
+      var onChange = function () { if (!readTheme() && state.cfg) applyTheme(currentTheme()); };
+      if (mq.addEventListener) mq.addEventListener('change', onChange);
+      else if (mq.addListener) mq.addListener(onChange);
+    }
+  }
+
+  // 时间本地化只影响格式，不改内容
+  function intlFmt(d, lang, wallClock) {
+    var locale = (state.cfg && state.cfg.intl && state.cfg.intl[lang]) || lang;
+    var opts = { dateStyle: 'medium', timeStyle: 'short', hour12: false };
+    if (wallClock) opts.timeZone = 'UTC';
+    try { return new Intl.DateTimeFormat(locale, opts).format(d); }
+    catch (e) { return d.toISOString().slice(0, 16).replace('T', ' '); }
+  }
+  function fmtPostDate(iso, lang) {
+    // date_local 已按源站时区格式化；只取墙钟字段，避免浏览器时区二次换算
+    if (!iso) return '';
+    var m = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/.exec(iso);
+    var d = m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5])) : new Date(iso);
+    if (isNaN(d)) return String(iso).slice(0, 19).replace('T', ' ');
+    return intlFmt(d, lang, true);
+  }
+  function fmtUpdated(iso, lang) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    if (isNaN(d)) return String(iso).slice(0, 16).replace('T', ' ');
+    return intlFmt(d, lang, false);
+  }
+
+  function initLangButtons() {
+    var box = get('lang');
+    box.textContent = '';
+    var shortNames = (state.cfg && state.cfg.shortNames) || {};
+    var names = (state.cfg && state.cfg.names) || {};
+    locales().forEach(function (code) {
+      var b = el('button', '', shortNames[code] || code);
+      b.type = 'button';
+      b.setAttribute('data-lang', code);
+      b.setAttribute('aria-label', names[code] || code);
+      b.setAttribute('title', names[code] || code);
+      b.setAttribute('aria-pressed', 'false');
+      b.addEventListener('click', function () { setLang(code); });
+      box.appendChild(b);
+    });
+  }
+  function updateLangButtons() {
+    var box = get('lang');
+    box.setAttribute('aria-label', t('langLabel'));
+    Array.prototype.forEach.call(box.children, function (b) {
+      b.setAttribute('aria-pressed', b.getAttribute('data-lang') === state.lang ? 'true' : 'false');
+    });
+  }
+
+  function siteName() {
+    if (!state.data) return t('author');
+    var names = state.data.display_names || {};
+    return names[state.lang] || state.data.display_name || t('author');
+  }
+  function renderChrome() {
+    var cfg = state.cfg || {};
+    document.documentElement.lang = (cfg.htmlLang && cfg.htmlLang[state.lang]) || state.lang;
+    var title = siteName() + ' · ' + t('title');
+    document.title = title;
+    get('title').textContent = title;
+    if (state.data) {
+      get('meta').textContent =
+        t('metaCount', { count: state.data.count || 0 }) + t('metaSep') +
+        t('metaUpdated', { date: fmtUpdated(state.data.updated_at, state.lang) });
+    } else {
+      get('meta').textContent = '';
+    }
+    updateLangButtons();
+    updateThemeLabel();  // 主题按钮提示随语言切换
+  }
+
+  function renderList() {
+    var box = get('list');
+    var status = get('status');
+    box.textContent = '';
+    if (state.failed) {
+      status.hidden = false;
+      status.textContent = t('loadError', { error: state.failed });
+      return;
+    }
+    if (!state.data) {
+      status.hidden = false;
+      status.textContent = t('loading');
+      return;
+    }
+    status.hidden = true;
+
+    var posts = state.data.posts || [];
+    if (!posts.length) { box.appendChild(el('div', 'meta', t('empty'))); return; }
+
+    posts.forEach(function (p) {
+      var card = el('div', 'card');
+      card.appendChild(el('div', 'date', fmtPostDate(p.date_local || p.date, state.lang)));
+
+      if (p.reply_context) {
+        var ctx = p.reply_context;
+        var sender = ctx.sender ? t('userSender', { id: ctx.sender }) : t('anonSender');
+        var c = el('div', 'ctx');
+        c.appendChild(el('div', 'date', t('replyLabel', { sender: sender })));
+        c.appendChild(el('div', '', ctx.text || t('nonText')));  // 原文
+        card.appendChild(c);
+      }
+
+      if (p.text) card.appendChild(el('div', 'text', p.text));  // 原文
+
+      var rel = p.media;
+      if (rel) {
+        var name = rel.split('/').pop();
+        var url = './media/' + encodeURIComponent(name);
+        if (p.media_type === 'photo' && /\.(jpg|jpeg|png|webp|gif)$/i.test(name)) {
+          var img = el('img');
+          img.src = url; img.loading = 'lazy'; img.alt = t('imageAlt');
+          card.appendChild(img);
+        } else {
+          var a = el('a', 'file', t('attachment', { name: name }));
+          a.href = url; a.target = '_blank'; a.rel = 'noopener';
+          card.appendChild(a);
+        }
+      }
+      box.appendChild(card);
+    });
+  }
+
+  function setLang(code) {
+    state.lang = pick(code, state.cfg);
+    save(state.lang);
+    renderChrome();
+    renderList();
+  }
+
+  function check(r) {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  }
+  // 允许把语言包 / 数据内联注入做离线预览；生产环境走相对路径 fetch
+  function loadJson(rel, inlineKey) {
+    var injected = window[inlineKey];
+    if (injected) return Promise.resolve(injected);
+    return fetch(rel).then(check);
+  }
+  // 相对路径：项目仓库 Pages 挂在 /<repo>/ 下也能正常加载
+  loadJson('./i18n.json', '__ARCHIVE_I18N__')
+    .then(function (cfg) {
+      state.cfg = cfg;
+      initLangButtons();
+      initThemeButton();
+      setLang(detect(cfg));
+      return loadJson('./data/posts.json', '__ARCHIVE_POSTS__');
+    })
+    .then(function (data) {
+      state.data = data;
+      renderChrome();
+      renderList();
+    })
+    .catch(function (e) {
+      state.failed = e.message;
+      initThemeButton();
+      if (state.cfg) { renderChrome(); renderList(); }
+      else {
+        get('title').textContent = 'Message Archive';
+        get('status').textContent = 'Failed to load i18n.json: ' + e.message;
+      }
+    });
+})();
+</script>
+</body>
+</html>
