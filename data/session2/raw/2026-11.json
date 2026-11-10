@@ -883,5 +883,33 @@
     "reply_to_msg_id": null,
     "reply_quote": null,
     "deleted": false
+  },
+  {
+    "id": 153932,
+    "date": "2026-11-10T17:30:33+00:00",
+    "date_local": "2026-11-11T01:30:33+08:00",
+    "month": "2026-11",
+    "sender_id": 5678341267,
+    "text": "https://youtu.be/WAFFDalOVUc?si=n_sltNry_NMgDLM-",
+    "media": null,
+    "media_type": "photo",
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 153934,
+    "date": "2026-11-10T17:30:38+00:00",
+    "date_local": "2026-11-11T01:30:38+08:00",
+    "month": "2026-11",
+    "sender_id": 5678341267,
+    "text": "如果你是透過 Terry 邀請碼註冊 OKX 的朋友，也想了解影片中介紹的交易策略，記得加入 AlphaLab OKX LINE 社群，以下免費的交易學習資源別錯過～\n\nAlphaLab × OKX LINE 社群\nhttps://reurl.cc/6X84XZ\n\nAlphaLab 交易策略\nhttps://www.alphalab.site/category/crypto/trading\n\n還沒註冊的朋友，也可以透過以下連結註冊，同步附上操作教學～\n\nTerry × OKX 邀請碼\nhttps://hackbear.tv/okx\n\nOKX交易所操作教學\nhttps://www.alphalab.site/okx",
+    "media": null,
+    "media_type": "photo",
+    "grouped_id": null,
+    "reply_to_msg_id": 153932,
+    "reply_quote": null,
+    "deleted": false
   }
 ]
