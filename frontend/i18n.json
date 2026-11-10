@@ -42,6 +42,9 @@
       "sessionCrypto": "Crypto",
       "sessionStocks": "美股",
       "avatarAlt": "Terry 的头像",
+      "searchPlaceholder": "搜索消息…",
+      "searchEmpty": "没有匹配的消息",
+      "sessionLabel": "分组",
       "themeToDark": "切换到深色主题",
       "themeToLight": "切换到浅色主题"
     },
@@ -64,6 +67,9 @@
       "sessionCrypto": "Crypto",
       "sessionStocks": "美股",
       "avatarAlt": "Terry 的頭像",
+      "searchPlaceholder": "搜尋訊息…",
+      "searchEmpty": "沒有符合的訊息",
+      "sessionLabel": "分組",
       "themeToDark": "切換至深色主題",
       "themeToLight": "切換至淺色主題"
     },
@@ -86,6 +92,9 @@
       "sessionCrypto": "Crypto",
       "sessionStocks": "US Stocks",
       "avatarAlt": "Terry's avatar",
+      "searchPlaceholder": "Search messages…",
+      "searchEmpty": "No matching messages",
+      "sessionLabel": "Session",
       "themeToDark": "Switch to dark theme",
       "themeToLight": "Switch to light theme"
     }

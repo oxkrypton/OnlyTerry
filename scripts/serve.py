@@ -25,7 +25,14 @@ from urllib.parse import unquote, urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "dist"
-SOURCE_FILES = {"", "index.html", "i18n.json"}
+FRONTEND = ROOT / "frontend"
+# source 模式下这些路径直接读前端源码，其余（data/ media/）仍走已构建的 dist/
+SOURCE_FILES = {
+    "": "index.html",
+    "index.html": "index.html",
+    "i18n.json": "i18n.json",
+    "avatar.webp": "avatar.webp",
+}
 
 
 class DevHandler(http.server.SimpleHTTPRequestHandler):
@@ -37,7 +44,7 @@ class DevHandler(http.server.SimpleHTTPRequestHandler):
         if ".." in Path(rel).parts:
             return str(DIST / "__blocked__")
         if self.server.source_mode and rel in SOURCE_FILES:
-            return str(ROOT / (rel or "index.html"))
+            return str(FRONTEND / SOURCE_FILES[rel])
         return str(DIST / rel)
 
     def end_headers(self):
@@ -96,7 +103,7 @@ def main():
     print("=" * 62)
     print(f"  数据      {posts_file.relative_to(ROOT)}  （{posts['count']} 条发言，"
           f"{'MOCK 演示数据' if is_mock else '已构建数据'}）")
-    print(f"  页面      {'仓库根 index.html / i18n.json（改完刷新即生效）' if srv.source_mode else 'dist/index.html（纯线上产物）'}")
+    print(f"  页面      {'frontend/index.html（源码，改完刷新即生效）' if srv.source_mode else 'dist/index.html（纯线上产物）'}")
     print(f"  媒体      dist/media/   语言包  {'i18n.json' if srv.source_mode else 'dist/i18n.json'}")
     print("  停止      Ctrl+C")
     print("=" * 62, flush=True)

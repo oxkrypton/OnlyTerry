@@ -19,9 +19,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 DATA_ROOT = Path("data")
-# 每个话题一个 session：data/session{N}/raw/*.json + data/session{N}/state.json
-I18N_FILE = Path("i18n.json")
-AVATAR_FILE = Path("avatar.webp")  # 前端气泡头像（96x96 WebP，构建时随站点一起发布）
+# 前端源码统一放在 frontend/；本脚本只把它们复制进 dist/ 发布
+FRONTEND = Path("frontend")
+HTML_FILE = FRONTEND / "index.html"
+I18N_FILE = FRONTEND / "i18n.json"
+AVATAR_FILE = FRONTEND / "avatar.webp"  # 气泡头像（96x96 WebP）
 DIST = Path("dist")
 DIST_DATA = DIST / "data"
 DIST_MEDIA = DIST / "media"
@@ -145,7 +147,7 @@ def main():
         "months": sorted({r["month"] for r in rows}, reverse=True),
     })
     shutil.copy2(I18N_FILE, DIST / "i18n.json")
-    shutil.copy2("index.html", DIST / "index.html")
+    shutil.copy2(HTML_FILE, DIST / "index.html")
     if AVATAR_FILE.exists():
         shutil.copy2(AVATAR_FILE, DIST / AVATAR_FILE.name)
     print(
