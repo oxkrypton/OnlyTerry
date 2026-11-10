@@ -141,6 +141,74 @@ body { padding-bottom: 6rem; }  /* 给固定栏留位，最后一条消息不被
 .liquid-search-input::placeholder { color: rgb(100 116 139 / 80%); opacity: 1; }
 .dark .liquid-search-input::placeholder { color: rgb(148 163 184 / 80%); }
 
+/* ---------- 引用块：Telegram 回复气泡样式 ----------
+   淡蓝底 + 上下内缩的蓝色竖条 + 蓝色发言者 + 单行省略号，正文排在引用块下方。
+   默认态刻意不放「展开」按钮（与截图一致）：被截断的块整块可点击/回车展开，
+   展开后才在底部出现「收起」。 */
+.tg-quote {
+  position: relative;
+  margin-top: .5rem;
+  padding: .4rem .65rem .45rem .8rem;
+  background: #eaf3fc;
+  border-radius: .55rem;
+  overflow: hidden;
+}
+/* 竖条几乎贴满引用块上下（各留 1px），比旧版更宽、更柔和的灰青色；
+   外层 .tg-quote 的 overflow:hidden + 圆角会顺带把两端裁出圆角 */
+.tg-quote::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 1px; bottom: 1px;
+  width: 4px;
+  border-radius: 2px;
+  background: #5b9fb2;
+}
+.dark .tg-quote { background: #243c53; }
+.dark .tg-quote::before { background: #5eb0f7; }
+.tg-quote.is-expandable { cursor: pointer; }
+.tg-quote.is-expandable:hover { background: #e0eefb; }
+.dark .tg-quote.is-expandable:hover { background: #2b4661; }
+.tg-quote.is-expandable:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
+/* 原消息未收录：灰一档，不抢正文 */
+.tg-quote.is-missing { background: rgb(241 245 249 / 85%); }
+.tg-quote.is-missing::before { background: #cbd5e1; }
+.dark .tg-quote.is-missing { background: rgb(30 41 59 / 55%); }
+.dark .tg-quote.is-missing::before { background: #64748b; }
+
+.tg-quote-name {
+  display: block;
+  font-size: .8125rem;
+  line-height: 1.35;
+  font-weight: 600;
+  color: #168acd;
+}
+.dark .tg-quote-name { color: #6ab3f3; }
+.tg-quote-text {
+  margin-top: .0625rem;
+  font-size: .8125rem;
+  line-height: 1.45;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dark .tg-quote-text { color: #e2e8f0; }
+.tg-quote-text.is-placeholder { color: rgb(100 116 139); }
+.dark .tg-quote-text.is-placeholder { color: rgb(148 163 184); }
+.tg-quote.is-open .tg-quote-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.tg-quote-hint {
+  display: none;
+  margin-top: .25rem;
+  font-size: .6875rem;
+  font-weight: 600;
+  color: #168acd;
+}
+.dark .tg-quote-hint { color: #6ab3f3; }
+.tg-quote.is-open .tg-quote-hint { display: block; }
+
 @media (prefers-reduced-motion: reduce) {
   .liquid-glass-surface::after { transition: none; }
 }
@@ -233,9 +301,9 @@ body { padding-bottom: 6rem; }  /* 给固定栏留位，最后一条消息不被
   var TAB_BASE    = 'tab font-medium focus:outline-none focus:ring-2 focus:ring-blue-500';
   var TAB_ACTIVE  = 'tab-active !bg-blue-600 !text-white';
   var TAB_IDLE    = 'text-slate-600 dark:text-slate-300';
-  var CLS_DATE    = 'text-xs text-slate-500 dark:text-slate-400 tabular-nums';
-  var CLS_CTX     = 'mt-2 px-3 py-2 bg-slate-50 dark:bg-slate-900/60 border-l-2 border-slate-300 dark:border-slate-600 rounded text-xs text-slate-600 dark:text-slate-300 whitespace-pre-wrap break-words';
   var CLS_EMPTY   = 'alert bg-slate-100 dark:bg-slate-800 text-sm text-slate-500 dark:text-slate-400';
+  /* 引用块的伪元素竖条 / 单行省略号需要自定义 CSS，统一放在 <style> 的 .tg-quote 段落；
+     这里只保留 Tailwind 能表达的卡片 / 正文 / 链接 / 图片类名。 */
 
   /* Post Card：不使用 daisyUI chat-bubble。气泡左下角的小凸角是 ::before 伪元素，
      不参与父级 box-shadow，所以那一个角没有阴影；改成四角统一的 rounded-xl + shadow-sm 卡片后消失。 */
@@ -564,6 +632,61 @@ body { padding-bottom: 6rem; }  /* 给固定栏留位，最后一条消息不被
     get('lightboxImg').removeAttribute('src');
   }
 
+  /* 引用块：页面上一律不展示发言者数字 ID。引用群友显示「群友 / Group member」，
+     引用博主自己的旧消息显示「博主 / Author」，配色与 Telegram 回复气泡一致。 */
+  function renderQuote(ctx) {
+    var missing = !!ctx.missing;
+    var q = el('blockquote', 'tg-quote' + (missing ? ' is-missing' : ''));
+    var sender = ctx.is_self ? t('author') : t('anonSender');
+    q.setAttribute('aria-label', t('quoteAria', { sender: sender }));
+    q.appendChild(el('span', 'tg-quote-name', sender));
+
+    // 新数据可能带博主选中的引用片段；历史数据没有，直接展示完整原文
+    var short = ctx.quote || ctx.text || '';
+    var full = (ctx.quote && ctx.text && ctx.quote !== ctx.text) ? ctx.text : short;
+    var body = el('div', 'tg-quote-text');
+    if (short) {
+      body.textContent = short;   // 原文，不做链接化，保持引用块干净
+    } else {
+      body.classList.add('is-placeholder');
+      body.textContent = missing ? t('quoteMissing')
+        : ctx.media_type ? t(ctx.media_type === 'photo' ? 'quotedPhoto' : 'quotedMedia')
+        : t('nonText');
+    }
+    q.appendChild(body);
+    q._short = short;
+    q._full = full;
+    return q;
+  }
+
+  /* 测量必须在 appendChild 之后：DOM 未入文档时 scrollWidth 恒为 0。
+     被截断（或另有完整原文）的引用块整块可点击/回车展开，默认态不出现任何按钮。 */
+  function initQuoteExpand(box) {
+    Array.prototype.forEach.call(box.querySelectorAll('.tg-quote-text'), function (body) {
+      var q = body.parentNode;
+      var needMore = q._full !== q._short;
+      var clipped = body.scrollWidth > body.clientWidth + 1;
+      if (!needMore && (!clipped || body.classList.contains('is-placeholder'))) return;
+
+      q.classList.add('is-expandable');
+      q.tabIndex = 0;
+      q.setAttribute('aria-expanded', 'false');
+      q.setAttribute('title', t('quoteExpand'));
+      q.appendChild(el('span', 'tg-quote-hint', t('quoteCollapse')));
+
+      function toggle() {
+        var open = q.classList.toggle('is-open');
+        body.textContent = open ? q._full : q._short;
+        q.setAttribute('aria-expanded', open ? 'true' : 'false');
+        q.setAttribute('title', t(open ? 'quoteCollapse' : 'quoteExpand'));
+      }
+      q.addEventListener('click', toggle);
+      q.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+      });
+    });
+  }
+
   function renderPost(p) {
     var card = el('div', CLS_CARD);
 
@@ -575,12 +698,7 @@ body { padding-bottom: 6rem; }  /* 给固定栏留位，最后一条消息不被
     card.appendChild(top);
 
     if (p.reply_context) {
-      var ctx = p.reply_context;
-      var sender = ctx.sender ? t('userSender', { id: ctx.sender }) : t('anonSender');
-      var c = el('div', CLS_CTX);
-      c.appendChild(el('div', CLS_DATE, t('replyLabel', { sender: sender })));
-      c.appendChild(el('div', '', ctx.text || t('nonText')));  // 原文
-      card.appendChild(c);
+      card.appendChild(renderQuote(p.reply_context));
     }
 
     if (p.text) {
@@ -640,6 +758,7 @@ body { padding-bottom: 6rem; }  /* 给固定栏留位，最后一条消息不被
       return;
     }
     posts.forEach(function (p) { box.appendChild(renderPost(p)); });
+    initQuoteExpand(box);   // 卡片入文档后再测量引用文本是否被截断
   }
 
   function setLang(code) {

@@ -67,7 +67,7 @@ jobs:
       # i18n.json 只翻译界面文案；消息正文与回复上下文保持 Telegram 原文。
       # 语言包会在此步骤做三语键一致性校验，并随产物复制到 dist/。
       # 站点名可按语言覆盖；未配置的 Secret 为空串，脚本回落 DISPLAY_NAME。
-      # ANONYMIZE_CONTEXT 仅在 INCLUDE_CONTEXT=1 时生效。
+      # 引用上下文默认开启：只展出被引用消息的原文，群友 ID / 昵称一律匿名。
       # 只改文案不改数据时，定时任务因 data/ 无 diff 不会重新部署，需手动 Run workflow。
       - name: Build view
         env:
@@ -75,7 +75,7 @@ jobs:
           DISPLAY_NAME_ZH_CN: ${{ secrets.DISPLAY_NAME_ZH_CN }}
           DISPLAY_NAME_ZH_TW: ${{ secrets.DISPLAY_NAME_ZH_TW }}
           DISPLAY_NAME_EN: ${{ secrets.DISPLAY_NAME_EN }}
-          INCLUDE_CONTEXT: "0"
+          INCLUDE_CONTEXT: "1"
           ANONYMIZE_CONTEXT: "1"
         run: python scripts/build_view.py
 

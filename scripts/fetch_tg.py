@@ -163,6 +163,13 @@ def media_kind(msg):
 def make_record(msg, kind, media_path):
     d = msg.date
     reply = getattr(msg, "reply_to", None)
+    rid = getattr(reply, "reply_to_msg_id", None) if reply else None
+    # Telegram 的「部分引用」：博主回复时可选中原文的一段，quote_text 即该片段。
+    # 老版本 Telethon / 旧 raw 没有此字段，用 getattr 兜底，展示层会回落到整条原文。
+    quote = getattr(reply, "quote_text", None) if reply else None
+    # 直接发在话题里的消息 reply_to 指向话题根消息，只是话题归属，不是回复某人
+    if TOPIC_ID and rid == TOPIC_ID and not quote:
+        rid, quote = None, None
     return {
         "id": msg.id,
         "date": d.isoformat(),
@@ -173,7 +180,8 @@ def make_record(msg, kind, media_path):
         "media": media_path,
         "media_type": kind,
         "grouped_id": getattr(msg, "grouped_id", None),  # 相册分组，展示层目前不聚合
-        "reply_to_msg_id": getattr(reply, "reply_to_msg_id", None) if reply else None,
+        "reply_to_msg_id": rid,
+        "reply_quote": quote or None,
         "deleted": False,
     }
 
@@ -301,6 +309,8 @@ async def main():
             await client.get_input_entity(user)
         )
         state["target_user_id"] = target_uid
+        # 展示层靠它区分「话题归属」与「真实回复」，不必再从目录名猜
+        state["topic_id"] = TOPIC_ID
 
         seen_max = last_id
         added = 0
@@ -335,6 +345,7 @@ async def main():
     no_change = (
         added == 0 and changed == 0 and media_added == 0
         and prev.get("target_user_id") == target_uid
+        and prev.get("topic_id") == TOPIC_ID
         and prev.get("last_msg_id") == new_cursor
         and prev.get("total") == len(records)
     )
