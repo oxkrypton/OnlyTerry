@@ -6,8 +6,145 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#f8fafc">
 <title>Terry · Message Archive</title>
+<!-- daisyUI v4 官方 CDN 组合：先组件库 CSS，后 Tailwind Play CDN -->
+<link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.24/dist/full.min.css" rel="stylesheet" type="text/css">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config = { darkMode: 'class' };</script>
+<style>
+/* 常驻滚动条槽位：列表空/有数据切换时，视口宽度保持不变 */
+html { scrollbar-gutter: stable; }
+/* 图片预览禁止选中/拖拽/点击高亮，避免出现整张蓝色 ::selection 蒙层 */
+#list img, #lightbox, #lightbox img {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---------- 底部常驻 liquid glass 搜索栏 ----------
+   结构照搬 31ef5b9：玻璃层 absolute inset:0 / z-index:0，
+   内容层 z-index:1，::before 折射、::after 高光，各管一件事。 */
+body { padding-bottom: 6rem; }  /* 给固定栏留位，最后一条消息不被盖住 */
+
+.liquid-glass-search {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  margin-inline: auto;
+  width: min(24rem, calc(100vw - 2rem));
+  height: 3.25rem;
+  z-index: 40;                 /* 低于 lightbox 的 z-50 */
+  display: flex;
+  align-items: center;
+  border-radius: 999px;        /* 大圆角 */
+  color: #0f172a;
+}
+.dark .liquid-glass-search { color: #f1f5f9; }
+.liquid-glass-search:focus-within {
+  outline: 2px solid rgb(59 130 246 / 55%);
+  outline-offset: 3px;
+}
+
+.liquid-glass-surface {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  --glass-tint: rgb(255 255 255 / 42%);
+  --glass-highlight: rgb(255 255 255 / 90%);
+  --glass-edge: rgb(255 255 255 / 60%);
+  --glass-shade: rgb(30 45 65 / 12%);
+}
+.liquid-glass-surface::before,
+.liquid-glass-surface::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.liquid-glass-refraction { position: absolute; inset: 0; border-radius: inherit; }
+.liquid-glass-surface > svg.lg-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+/* ::before 永远是合法值：不支持 backdrop-filter:url() 的浏览器仍保留磨砂玻璃 */
+.liquid-glass-surface::before {
+  background: var(--glass-tint);
+  -webkit-backdrop-filter: blur(6px) saturate(1.25);
+  backdrop-filter: blur(6px) saturate(1.25);
+}
+/* 位移折射单独一层，失效时不影响上面的兜底 blur */
+.liquid-glass-surface[data-ready="true"] .liquid-glass-refraction {
+  -webkit-backdrop-filter: var(--liquid-glass-filter) blur(0.2px) saturate(1.12);
+  backdrop-filter: var(--liquid-glass-filter) blur(0.2px) saturate(1.12);
+}
+.liquid-glass-surface::after {
+  background: linear-gradient(155deg, rgb(255 255 255 / 35%), transparent 38%, transparent 60%, rgb(255 255 255 / 12%));
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    inset 1px 0 0 var(--glass-edge),
+    inset -1px 0 0 rgb(255 255 255 / 28%),
+    inset 0 -1px 0 var(--glass-shade),
+    inset 0 0 0 1px rgb(255 255 255 / 30%),
+    0 10px 30px rgb(20 30 45 / 14%),
+    0 2px 8px rgb(20 30 45 / 8%);
+  transition: background 180ms ease, box-shadow 180ms ease;
+}
+.liquid-glass-search:hover .liquid-glass-surface::after,
+.liquid-glass-search:focus-within .liquid-glass-surface::after {
+  background: linear-gradient(145deg, rgb(255 255 255 / 45%), transparent 55%, rgb(255 255 255 / 18%));
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    inset 0 0 0 1px var(--glass-edge),
+    inset 0 -2px 5px var(--glass-shade),
+    0 14px 36px rgb(20 30 45 / 18%),
+    0 3px 10px rgb(20 30 45 / 10%);
+}
+.dark .liquid-glass-surface {
+  --glass-tint: rgb(30 41 59 / 45%);
+  --glass-highlight: rgb(255 255 255 / 32%);
+  --glass-edge: rgb(255 255 255 / 16%);
+  --glass-shade: rgb(0 0 0 / 30%);
+}
+.dark .liquid-glass-surface::after {
+  background: linear-gradient(155deg, rgb(255 255 255 / 6%), transparent 38%, transparent 60%, rgb(255 255 255 / 2%));
+}
+
+.liquid-search-icon {
+  position: absolute;
+  left: 1.15rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  width: 1.1rem;
+  height: 1.1rem;
+  color: rgb(100 116 139 / 85%);
+  pointer-events: none;
+}
+.dark .liquid-search-icon { color: rgb(148 163 184 / 90%); }
+.liquid-search-input {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  padding: 0 1.25rem 0 3rem;
+  border: 0;
+  outline: none;
+  box-shadow: none;
+  background: transparent;
+  color: inherit;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  border-radius: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.liquid-search-input::placeholder { color: rgb(100 116 139 / 80%); opacity: 1; }
+.dark .liquid-search-input::placeholder { color: rgb(148 163 184 / 80%); }
+
+@media (prefers-reduced-motion: reduce) {
+  .liquid-glass-surface::after { transition: none; }
+}
+</style>
 <script>
 /* 首次绘制前定好主题，避免深色模式闪白；data-theme 保留给原有逻辑 */
 (function () {
@@ -25,31 +162,59 @@
 
   <header class="flex flex-wrap items-start justify-between gap-4 pb-4 mb-6 border-b border-slate-200 dark:border-slate-700">
     <div class="flex items-center gap-3 min-w-0">
-      <img id="header-avatar" src="./avatar.webp" alt="Terry 的头像" class="w-12 h-12 rounded-full object-cover shrink-0 border border-slate-200 dark:border-slate-700">
+      <div class="avatar shrink-0">
+        <div class="w-12 h-12 rounded-full ring-1 ring-slate-200 dark:ring-slate-700">
+          <img id="header-avatar" src="./avatar.webp" alt="Terry 的头像" class="w-12 h-12 rounded-full object-cover">
+        </div>
+      </div>
       <div class="min-w-0">
         <h1 id="title" class="text-xl font-bold text-slate-900 dark:text-slate-100 truncate">Terry · Message Archive</h1>
-        <span id="meta" class="text-xs text-slate-500 dark:text-slate-400"></span>
+        <span id="meta" class="block min-h-4 text-xs text-slate-500 dark:text-slate-400"></span>
       </div>
     </div>
     <div class="shrink-0">
       <div class="inline-flex items-center gap-1 bg-slate-200/70 dark:bg-slate-800/70 p-1 rounded-lg text-xs font-medium">
         <div id="lang" class="inline-flex gap-1" role="group" aria-label="语言"></div>
         <button id="themeBtn" type="button" data-lucide="moon" aria-pressed="false"
-          class="inline-flex items-center justify-center w-8 h-8 rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"></button>
+          class="btn btn-xs btn-square btn-ghost text-slate-500 dark:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"></button>
       </div>
     </div>
   </header>
 
-  <div class="relative w-full mb-6">
-    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-    <input id="search-input" type="search" placeholder="搜索消息…" autocomplete="off"
-      class="w-full pl-10 pr-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
+  <!-- 搜索栏已移到 body 末尾：fixed 常驻底部居中，不随滚动 -->
+
+  <div id="sessions" class="tabs tabs-boxed w-fit gap-1 min-h-[2.75rem] bg-slate-200/70 dark:bg-slate-800/70 p-1 rounded-lg text-sm font-medium mb-6" role="group" aria-label="分组"></div>
+
+  <!-- 列表区固定留位；状态文字绝对定位，显隐不占流，避免「加载中 → 空态」整块上移 -->
+  <div class="relative min-h-[60vh]">
+    <div id="status" class="absolute inset-x-0 top-0 text-sm text-slate-500 dark:text-slate-400">加载中…</div>
+    <div id="list"></div>
   </div>
+</div>
 
-  <div id="sessions" class="inline-flex gap-1 bg-slate-200/70 dark:bg-slate-800/70 p-1 rounded-lg text-sm font-medium mb-6" role="group" aria-label="分组"></div>
+<!-- 底部常驻搜索栏：玻璃层与内容层分离，折射由 canvas SDF → feDisplacementMap 驱动 -->
+<div class="liquid-glass-search" id="search-wrap" role="search">
+  <span class="liquid-glass-surface" id="search-glass" aria-hidden="true">
+    <span class="liquid-glass-refraction"></span>
+    <svg class="lg-defs" width="0" height="0" focusable="false">
+      <defs>
+        <filter id="lg-search-glass" filterUnits="userSpaceOnUse" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feImage id="lg-image" result="refraction" />
+          <feDisplacementMap id="lg-disp" in="SourceGraphic" in2="refraction" xChannelSelector="R" yChannelSelector="G" scale="0" />
+        </filter>
+      </defs>
+    </svg>
+  </span>
+  <svg class="liquid-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+  <input id="search-input" type="search" placeholder="搜索消息…" autocomplete="off" aria-label="搜索消息" class="liquid-search-input">
+</div>
 
-  <div id="status" class="text-sm text-slate-500 dark:text-slate-400 py-6">加载中…</div>
-  <div id="list" class="space-y-4"></div>
+<!-- 图片放大层：display 由 hidden / flex 互斥切换，点背景或按 Esc 关闭 -->
+<div id="lightbox" class="hidden fixed inset-0 z-50 items-center justify-center overscroll-contain touch-none select-none outline-none bg-black/80 p-4"
+     role="dialog" aria-modal="true" aria-label="" tabindex="-1">
+  <button id="lightboxClose" type="button" aria-label=""
+    class="absolute top-4 right-4 p-2 rounded-full text-white/80 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/70"></button>
+  <img id="lightboxImg" alt="" draggable="false" class="max-h-full max-w-full object-contain rounded-lg shadow-2xl">
 </div>
 
 <script>
@@ -58,33 +223,48 @@
   var FALLBACK = 'zh-CN';
   var STORE_KEY = 'tg-archive-lang';
   var THEME_KEY = 'tg-archive-theme';
-  var state = { cfg: null, data: null, lang: FALLBACK, failed: null, session: 'session2', query: '' };
+  var state = { cfg: null, data: null, lang: FALLBACK, failed: null, session: 'session3', query: '' };
   var themeReady = false;
 
-  /* Tailwind 类名集中管理，避免散落的自定义 CSS */
-  var LANG_BASE   = 'px-2.5 py-1 rounded-md text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500';
-  var LANG_ACTIVE = 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm';
-  var LANG_IDLE   = 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white';
-  var TAB_BASE    = 'px-3 py-1.5 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500';
-  var TAB_ACTIVE  = 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm';
-  var TAB_IDLE    = 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white';
+  /* Tailwind 类名 + daisyUI 组件类集中管理，避免散落的自定义 CSS */
+  var LANG_BASE   = 'btn btn-xs btn-ghost font-medium focus:outline-none focus:ring-2 focus:ring-blue-500';
+  var LANG_ACTIVE = 'btn-active !bg-white !text-blue-600 dark:!bg-slate-700 dark:!text-blue-400';
+  var LANG_IDLE   = 'text-slate-600 dark:text-slate-300';
+  var TAB_BASE    = 'tab font-medium focus:outline-none focus:ring-2 focus:ring-blue-500';
+  var TAB_ACTIVE  = 'tab-active !bg-blue-600 !text-white';
+  var TAB_IDLE    = 'text-slate-600 dark:text-slate-300';
   var CLS_DATE    = 'text-xs text-slate-500 dark:text-slate-400 tabular-nums';
   var CLS_CTX     = 'mt-2 px-3 py-2 bg-slate-50 dark:bg-slate-900/60 border-l-2 border-slate-300 dark:border-slate-600 rounded text-xs text-slate-600 dark:text-slate-300 whitespace-pre-wrap break-words';
-  var CLS_TEXT    = 'mt-2 text-sm leading-relaxed whitespace-pre-wrap break-words';
-  var CLS_EMPTY   = 'text-sm text-slate-500 dark:text-slate-400 py-6';
+  var CLS_EMPTY   = 'alert bg-slate-100 dark:bg-slate-800 text-sm text-slate-500 dark:text-slate-400';
 
-  /* session → 单栏切换标题，文案走 i18n */
+  /* Post Card：不使用 daisyUI chat-bubble。气泡左下角的小凸角是 ::before 伪元素，
+     不参与父级 box-shadow，所以那一个角没有阴影；改成四角统一的 rounded-xl + shadow-sm 卡片后消失。 */
+  var CLS_CARD      = 'bg-white dark:bg-slate-800 rounded-xl border border-slate-200/80 dark:border-slate-700 p-4 mb-3 shadow-sm hover:border-slate-300 transition-all';
+  var CLS_POST_DATE = 'text-xs font-mono text-slate-400';
+  var CLS_TEXT      = 'text-sm text-slate-700 dark:text-slate-200 leading-relaxed mt-1.5 break-words whitespace-pre-wrap';
+  /* 正文 URL 必须是普通 inline + 强制断词：inline-flex 是不可拆分的 inline 盒，
+     长 URL 会整块撑破卡片；附件链接保留 inline-flex，让 mt-3 生效 */
+  var CLS_LINK      = 'text-blue-600 hover:underline font-medium';
+  var CLS_LINK_TEXT = CLS_LINK + ' inline break-all';
+  var CLS_IMG       = 'mt-3 rounded-lg max-h-60 w-auto object-cover border border-slate-100 cursor-zoom-in max-w-full';
+  var CLS_COPY_BTN  = 'shrink-0 -mt-1 -mr-1 p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:text-slate-200 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors';
+
+  /* session → 单栏切换标题，文案走 i18n；默认落在美股 session3 */
   var SESSION_ORDER = ['session2', 'session3'];
   var SESSION_TITLE = { session2: 'sessionCrypto', session3: 'sessionStocks' };
   function sessionTitle(key) { return SESSION_TITLE[key] ? t(SESSION_TITLE[key]) : key; }
 
-  /* Lucide Icons (ISC License) — sun / moon 内联，零额外依赖 */
+  /* Lucide Icons (ISC License) — 全部内联，零额外依赖 */
   var ICONS = {
     sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/>' +
          '<path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/>' +
          '<path d="M2 12h2"/><path d="M20 12h2"/>' +
          '<path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
-    moon: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
+    moon: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
+    copy: '<rect x="8" y="8" width="14" height="14" rx="2" ry="2"/>' +
+          '<path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+    check: '<path d="M20 6 9 17l-5-5"/>',
+    x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>'
   };
   function iconSvg(name) {
     return '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
@@ -270,8 +450,8 @@
     status.textContent = text;
   }
   function renderChrome() {
-    var cfg = state.cfg || {};
-    document.documentElement.lang = (cfg.htmlLang && cfg.htmlLang[state.lang]) || state.lang;
+    /* 不改 <html lang>：正文是简体原文，整页语言固定 zh-CN；
+       改动它会让系统按 lang 重选 CJK 回退字体，正文「跟着变字体」 */
     document.title = 'Terry · Message Archive';
     if (state.data) {
       get('meta').textContent =
@@ -281,26 +461,118 @@
       get('meta').textContent = '';
     }
     get('search-input').placeholder = t('searchPlaceholder');
+    get('search-input').setAttribute('aria-label', t('searchPlaceholder'));
     get('header-avatar').alt = t('avatarAlt');
     updateLangButtons();
     renderSessionTabs();
     updateThemeLabel();
   }
 
-  function renderPost(p) {
-    var row = el('div', 'flex items-start gap-3');
-    var av = el('img');
-    av.src = './avatar.webp';
-    av.alt = t('avatarAlt');
-    av.loading = 'lazy';
-    av.className = 'shrink-0 w-9 h-9 rounded-full object-cover border border-slate-200 dark:border-slate-700';
-    row.appendChild(av);
+  /* ---------- Post Card 辅助：链接化 / 复制 / 图片放大 ---------- */
+  var URL_RE = /(https?:\/\/[^\s<>"']+)/g;
+  var URL_TAIL = /[.,;:!?、。，；：！？)\]}】》]+$/;
 
-    var bubble = el('div', 'relative flex-1 min-w-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 shadow-sm');
-    var tail = el('span', 'absolute -left-1 top-4 w-2.5 h-2.5 rotate-45 bg-white dark:bg-slate-800');
-    tail.setAttribute('aria-hidden', 'true');
-    bubble.appendChild(tail);
-    bubble.appendChild(el('div', CLS_DATE, fmtPostDate(p.date_local || p.date, state.lang)));
+  /* 正文来自抓取的外部数据，只用 DOM API 拼装，绝不拼 innerHTML */
+  function appendRichText(parent, raw) {
+    raw = String(raw);
+    URL_RE.lastIndex = 0;
+    var last = 0, m;
+    while ((m = URL_RE.exec(raw)) !== null) {
+      if (m.index > last) parent.appendChild(document.createTextNode(raw.slice(last, m.index)));
+      var url = m[0], tail = '', hit;
+      while ((hit = URL_TAIL.exec(url))) {
+        tail = hit[0] + tail;
+        url = url.slice(0, -hit[0].length);
+      }
+      if (url) {
+        var a = el('a', CLS_LINK_TEXT, url);
+        a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+        parent.appendChild(a);
+      }
+      if (tail) parent.appendChild(document.createTextNode(tail));
+      last = m.index + m[0].length;
+    }
+    if (last < raw.length) parent.appendChild(document.createTextNode(raw.slice(last)));
+  }
+
+  function legacyCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.cssText = 'position:fixed;top:-1000px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    return ok;
+  }
+  function copyText(text, cb) {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(
+        function () { cb(true); },
+        function () { cb(legacyCopy(text)); }
+      );
+    } else {
+      cb(legacyCopy(text));
+    }
+  }
+  function copyButton(text) {
+    var btn = el('button', CLS_COPY_BTN);
+    btn.type = 'button';
+    btn.innerHTML = iconSvg('copy');   // 静态图标，非用户内容
+    function label(key) {
+      var s = t(key);
+      btn.setAttribute('aria-label', s);
+      btn.setAttribute('title', s);
+    }
+    label('copyPost');
+    btn.addEventListener('click', function () {
+      copyText(text, function (ok) {
+        btn.innerHTML = iconSvg(ok ? 'check' : 'copy');
+        label(ok ? 'copyDone' : 'copyFailed');
+        clearTimeout(btn._copyTimer);
+        btn._copyTimer = setTimeout(function () {
+          btn.innerHTML = iconSvg('copy');
+          label('copyPost');
+        }, 1600);
+      });
+    });
+    return btn;
+  }
+
+  /* 放大层不碰 body/html 的任何布局属性：锁背景滚动会让滚动条消失、视口变宽，
+     部分浏览器还会重置滚动位置，两者都表现为「点开图片抖一下」。
+     背景滚动改由 lightbox 上的 wheel/touchmove 阻止，页面本身零改动。 */
+  function openLightbox(src, alt) {
+    var lb = get('lightbox');
+    var sel = window.getSelection();
+    if (sel && sel.removeAllRanges) sel.removeAllRanges();  // 清掉点击图片时残留的选中范围
+    get('lightboxImg').src = src;
+    get('lightboxImg').alt = alt || '';
+    lb.setAttribute('aria-label', t('lightboxClose'));
+    get('lightboxClose').setAttribute('aria-label', t('lightboxClose'));
+    lb.classList.remove('hidden');
+    lb.classList.add('flex');
+    lb.focus({ preventScroll: true });   // 聚焦全屏容器，不给按钮留蓝色 focus 环
+  }
+  function closeLightbox() {
+    var lb = get('lightbox');
+    if (lb.classList.contains('hidden')) return;
+    lb.classList.add('hidden');
+    lb.classList.remove('flex');
+    get('lightboxImg').removeAttribute('src');
+  }
+
+  function renderPost(p) {
+    var card = el('div', CLS_CARD);
+
+    var top = el('div', 'flex items-start justify-between gap-2');
+    var time = el('time', CLS_POST_DATE, fmtPostDate(p.date_local || p.date, state.lang));
+    time.setAttribute('datetime', p.date_local || p.date || '');
+    top.appendChild(time);
+    top.appendChild(copyButton(p.text || ''));   // 仅复制正文原文
+    card.appendChild(top);
 
     if (p.reply_context) {
       var ctx = p.reply_context;
@@ -308,28 +580,39 @@
       var c = el('div', CLS_CTX);
       c.appendChild(el('div', CLS_DATE, t('replyLabel', { sender: sender })));
       c.appendChild(el('div', '', ctx.text || t('nonText')));  // 原文
-      bubble.appendChild(c);
+      card.appendChild(c);
     }
 
-    if (p.text) bubble.appendChild(el('div', CLS_TEXT, p.text));  // 原文
+    if (p.text) {
+      var body = el('div', CLS_TEXT);
+      appendRichText(body, p.text);  // 原文 + URL 链接化
+      card.appendChild(body);
+    }
 
     var rel = p.media;
     if (rel) {
       var name = rel.split('/').pop();
       var url = './media/' + encodeURIComponent(name);
       if (p.media_type === 'photo' && /\.(jpg|jpeg|png|webp|gif)$/i.test(name)) {
-        var img = el('img', 'mt-3 rounded-lg max-w-full block');
+        var box = el('div', 'max-w-full');
+        var img = el('img', CLS_IMG);
         img.src = url; img.loading = 'lazy'; img.alt = t('imageAlt');
-        bubble.appendChild(img);
+        img.draggable = false;
+        // 阻止 mousedown 默认行为，浏览器才不会把点击当成「开始选择/拖拽」而给图片盖蓝层
+        img.addEventListener('mousedown', function (e) { e.preventDefault(); });
+        img.addEventListener('click', function (e) {
+          e.preventDefault();
+          openLightbox(img.src, img.alt);
+        });
+        box.appendChild(img);
+        card.appendChild(box);
       } else {
-        var a = el('a', 'inline-block mt-3 text-xs text-blue-600 dark:text-blue-400 hover:underline',
-                   t('attachment', { name: name }));
-        a.href = url; a.target = '_blank'; a.rel = 'noopener';
-        bubble.appendChild(a);
+        var a = el('a', CLS_LINK + ' inline-flex items-center gap-0.5 mt-3', t('attachment', { name: name }));
+        a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+        card.appendChild(a);
       }
     }
-    row.appendChild(bubble);
-    return row;
+    return card;
   }
 
   function renderList() {
@@ -340,7 +623,7 @@
     setStatus(null);
 
     var keys = sessionKeys();
-    var key = keys.indexOf(state.session) >= 0 ? state.session : (keys[0] || 'session2');
+    var key = keys.indexOf(state.session) >= 0 ? state.session : keys[0];
     var q = state.query.trim().toLowerCase();
     var posts = (state.data.posts || []).filter(function (p) {
       return (p.session || 'session3') === key;
@@ -382,6 +665,18 @@
     renderList();
   });
 
+  get('lightboxClose').innerHTML = iconSvg('x');
+  get('lightboxClose').addEventListener('click', closeLightbox);
+  get('lightbox').addEventListener('click', closeLightbox);
+  get('lightboxImg').addEventListener('mousedown', function (e) { e.preventDefault(); });
+  get('lightboxImg').addEventListener('click', function (e) { e.stopPropagation(); });
+  // 不锁 body 滚动，改在放大层拦截滚轮/触摸，背景不会跟着滚
+  get('lightbox').addEventListener('wheel', function (e) { e.preventDefault(); }, { passive: false });
+  get('lightbox').addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeLightbox();
+  });
+
   // 相对路径：项目仓库 Pages 挂在 /<repo>/ 下也能正常加载
   loadJson('./i18n.json', '__ARCHIVE_I18N__')
     .then(function (cfg) {
@@ -405,6 +700,104 @@
         get('status').textContent = 'Failed to load i18n.json: ' + e.message;
       }
     });
+})();
+</script>
+
+<script>
+/* Liquid glass 折射层（原生版，做法同 commit 31ef5b9）
+   1. canvas 逐像素算圆角胶囊的 SDF：只在边缘 bevel 带内产生法线
+   2. R/G 编码水平/垂直折射，127.5 为中性，中心保持清晰
+   3. feImage 喂给 feDisplacementMap，对 SourceGraphic 做位移
+   4. 尺寸变化时重生成，按 WxH 缓存；CSS 变量注入唯一 filter id */
+(function () {
+  'use strict';
+  var surface = document.getElementById('search-glass');
+  if (!surface) return;
+  var filter = document.getElementById('lg-search-glass');
+  var image = document.getElementById('lg-image');
+  var disp = document.getElementById('lg-disp');
+  var canvas = document.createElement('canvas');
+  var maps = new Map();
+  var MAX_MAPS = 32;
+  var frame = 0;
+  var previousSize = '';
+
+  function displacementMap(width, height) {
+    var key = width + 'x' + height;
+    if (maps.has(key)) return maps.get(key);
+    canvas.width = width;
+    canvas.height = height;
+    var ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    var img = ctx.createImageData(width, height);
+    var radius = Math.min(width, height) / 2;
+    var bevel = Math.min(radius * 0.6, 14);
+    for (var y = 0; y < height; y++) {
+      for (var x = 0; x < width; x++) {
+        var px = x + 0.5 - width / 2;
+        var py = y + 0.5 - height / 2;
+        var qx = Math.abs(px) - width / 2 + radius;
+        var qy = Math.abs(py) - height / 2 + radius;
+        var outsideX = Math.max(qx, 0);
+        var outsideY = Math.max(qy, 0);
+        var length = Math.hypot(outsideX, outsideY);
+        var distance = Math.min(Math.max(qx, qy), 0) + length - radius;
+        var depth = Math.max(0, -distance);
+        var weight = distance <= 0 ? Math.pow(Math.max(0, 1 - depth / bevel), 2) : 0;
+        var nx = 0, ny = 0;
+        if (length > 0) {
+          nx = (outsideX / length) * Math.sign(px);
+          ny = (outsideY / length) * Math.sign(py);
+        } else if (qx > qy) {
+          nx = Math.sign(px);
+        } else {
+          ny = Math.sign(py);
+        }
+        var i = (y * width + x) * 4;
+        img.data[i] = Math.round(127.5 - nx * weight * 127.5);
+        img.data[i + 1] = Math.round(127.5 - ny * weight * 127.5);
+        img.data[i + 2] = 128;
+        img.data[i + 3] = 255;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    var url = canvas.toDataURL();
+    if (maps.size >= MAX_MAPS) maps.delete(maps.keys().next().value);
+    maps.set(key, url);
+    return url;
+  }
+
+  function updateMap() {
+    frame = 0;
+    var bounds = surface.getBoundingClientRect();
+    var width = Math.max(1, Math.round(bounds.width));
+    var height = Math.max(1, Math.round(bounds.height));
+    var size = width + 'x' + height;
+    if (size === previousSize) return;
+    var url = displacementMap(width, height);
+    if (!url) return;
+    previousSize = size;
+    filter.setAttribute('width', String(width));
+    filter.setAttribute('height', String(height));
+    image.setAttribute('width', String(width));
+    image.setAttribute('height', String(height));
+    image.setAttribute('href', url);
+    disp.setAttribute('scale', String(Math.min(height * 0.18, 11) * 2));
+    surface.style.setProperty('--liquid-glass-filter', 'url(#lg-search-glass)');
+    surface.setAttribute('data-ready', 'true');
+  }
+
+  function schedule() {
+    if (!frame) frame = requestAnimationFrame(updateMap);
+  }
+
+  if (window.ResizeObserver) {
+    var observer = new ResizeObserver(schedule);
+    observer.observe(surface);
+  } else {
+    window.addEventListener('resize', schedule);
+  }
+  updateMap();
 })();
 </script>
 </body>

@@ -46,7 +46,11 @@
       "searchEmpty": "没有匹配的消息",
       "sessionLabel": "分组",
       "themeToDark": "切换到深色主题",
-      "themeToLight": "切换到浅色主题"
+      "themeToLight": "切换到浅色主题",
+      "copyPost": "复制本条内容",
+      "copyDone": "已复制",
+      "copyFailed": "复制失败",
+      "lightboxClose": "关闭图片预览"
     },
     "zh-TW": {
       "title": "發言歸檔",
@@ -71,7 +75,11 @@
       "searchEmpty": "沒有符合的訊息",
       "sessionLabel": "分組",
       "themeToDark": "切換至深色主題",
-      "themeToLight": "切換至淺色主題"
+      "themeToLight": "切換至淺色主題",
+      "copyPost": "複製本則內容",
+      "copyDone": "已複製",
+      "copyFailed": "複製失敗",
+      "lightboxClose": "關閉圖片預覽"
     },
     "en": {
       "title": "Message Archive",
@@ -96,7 +104,11 @@
       "searchEmpty": "No matching messages",
       "sessionLabel": "Session",
       "themeToDark": "Switch to dark theme",
-      "themeToLight": "Switch to light theme"
+      "themeToLight": "Switch to light theme",
+      "copyPost": "Copy message",
+      "copyDone": "Copied",
+      "copyFailed": "Copy failed",
+      "lightboxClose": "Close image preview"
     }
   }
 }
