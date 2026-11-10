@@ -16247,5 +16247,57 @@
     "grouped_id": null,
     "reply_to_msg_id": 3,
     "deleted": false
+  },
+  {
+    "id": 153580,
+    "date": "2026-11-10T07:54:30+00:00",
+    "date_local": "2026-11-10T15:54:30+08:00",
+    "month": "2026-11",
+    "sender_id": 6837675784,
+    "text": "spy+1",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": 153574,
+    "deleted": false
+  },
+  {
+    "id": 153582,
+    "date": "2026-11-10T08:00:04+00:00",
+    "date_local": "2026-11-10T16:00:04+08:00",
+    "month": "2026-11",
+    "sender_id": 8500566474,
+    "text": "⚠️ 例行防詐騙宣導 ⚠️\n🚨 群組嚴禁私訊組員 🚨\n* 所有收到的私訊都是釣魚詐騙。不要理會，馬上截圖回報 「詐騙舉報」 版\n* 假裝閒聊 -> 全都是詐騙，不要當下一個受害者\n* Terry，管理員 -> 絕對不會主動私訊任何人",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": 3,
+    "deleted": false
+  },
+  {
+    "id": 153586,
+    "date": "2026-11-10T08:10:47+00:00",
+    "date_local": "2026-11-10T16:10:47+08:00",
+    "month": "2026-11",
+    "sender_id": 1823953094,
+    "text": "老黄出轨这事其实一年前就已经被爆出来了，他要是真做了什么，我觉得至少那时就应该有对他进行国会听证了。甚至像超微老板一样，直接被抓。但这些都没发生，我认为他在当时是安全过关了",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": 153574,
+    "deleted": false
+  },
+  {
+    "id": 153587,
+    "date": "2026-11-10T08:12:00+00:00",
+    "date_local": "2026-11-10T16:12:00+08:00",
+    "month": "2026-11",
+    "sender_id": 1823953094,
+    "text": "难道是因为川普中期选举满盘皆输，树倒猢狲散，没能力帮他盖住了，老黄现在又被盯上了？",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": 3,
+    "deleted": false
   }
 ]
