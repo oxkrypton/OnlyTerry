@@ -2,8 +2,8 @@ name: Sync Telegram & Deploy Pages
 
 on:
   schedule:
-    - cron: '19 * * * *'
-    - cron: '49 * * * *'
+    # 每小时 19、49 分各一次；cron 按 UTC 计算，UTC+8 整点偏移不改变分钟数
+    - cron: '19,49 * * * *'
   workflow_dispatch:
 
 permissions:
