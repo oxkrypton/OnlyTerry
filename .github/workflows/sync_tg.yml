@@ -2,9 +2,8 @@ name: Sync Telegram & Deploy Pages
 
 on:
   schedule:
-    # 每半小时，错峰避开整点高负载。GitHub cron 按 UTC、最小粒度 5 分钟、
-    # 为 best-effort（高负载会延迟或整次跳过），公共仓库 60 天无活动会自动停用。
-    - cron: "7,37 * * * *"
+    - cron: '19 * * * *'
+    - cron: '49 * * * *'
   workflow_dispatch:
 
 permissions:
