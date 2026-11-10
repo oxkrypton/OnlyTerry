@@ -25,7 +25,13 @@
   }
   [hidden] { display:none !important; }
   body { margin:0; background:var(--bg); color:var(--text); font:15px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif; }
-  main { max-width:760px; margin:0 auto; padding:32px 20px 80px; }
+  main { max-width:1180px; margin:0 auto; padding:32px 20px 80px; }
+  .columns { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:20px; align-items:start; }
+  .column { min-width:0; }
+  .col-head { display:flex; align-items:baseline; justify-content:space-between; gap:8px; padding:0 2px 10px; margin-bottom:2px; border-bottom:1px solid var(--border); }
+  .col-title { font-size:16px; font-weight:650; margin:0; }
+  .col-count { color:var(--muted); font-size:12px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  @media (max-width: 860px) { .columns { grid-template-columns:1fr; gap:12px; } }
   header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; border-bottom:1px solid var(--border); padding-bottom:16px; margin-bottom:8px; }
   .head-main { min-width:0; }
   h1 { font-size:20px; margin:0; font-weight:650; word-break:break-word; }
@@ -39,16 +45,22 @@
   .icon-btn { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; padding:0; border:1px solid var(--border); border-radius:9px; background:var(--chip); color:var(--muted); cursor:pointer; }
   .icon-btn:hover { color:var(--text); background:var(--chip-hover); }
   .icon-btn svg { width:16px; height:16px; display:block; }
-  .card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px; margin:14px 0; }
+  /* 双栏 + 消息气泡：头像固定左侧，正文气泡带小尖角 */
+  .row { display:flex; align-items:flex-start; gap:10px; margin:14px 0; }
+  .avatar { flex:0 0 36px; width:36px; height:36px; border-radius:50%; border:1px solid var(--border); background:var(--chip) url('./avatar.webp') center/cover no-repeat; }
+  .bubble { position:relative; flex:1 1 auto; min-width:0; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 14px; box-shadow:var(--shadow); }
+  .bubble::before, .bubble::after { content:""; position:absolute; border-style:solid; border-color:transparent; }
+  .bubble::before { top:12px; left:-7px; border-width:6px 7px 6px 0; border-right-color:var(--border); }
+  .bubble::after  { top:13px; left:-6px; border-width:5px 6px 5px 0; border-right-color:var(--surface); }
   .date { color:var(--muted); font-size:12px; font-variant-numeric:tabular-nums; }
   /* 消息正文保持 Telegram 原文，不做简繁转换 / 字体替换 */
   .text { white-space:pre-wrap; word-break:break-word; margin-top:8px; }
   .ctx { margin-top:12px; padding:8px 12px; background:var(--ctx-bg); border-left:3px solid var(--ctx-border); border-radius:4px; color:var(--subtle); font-size:13px; white-space:pre-wrap; word-break:break-word; }
-  img { max-width:100%; border-radius:8px; margin-top:12px; display:block; }
+  .bubble img { max-width:100%; border-radius:8px; margin-top:12px; display:block; }
   a.file { display:inline-block; margin-top:12px; font-size:13px; color:var(--accent); }
   #status { color:var(--muted); padding:24px 0; }
   @media (prefers-reduced-motion: no-preference) {
-    body, .card, .lang button, .icon-btn { transition:background-color .18s ease, color .18s ease, border-color .18s ease; }
+    body, .bubble, .lang button, .icon-btn { transition:background-color .18s ease, color .18s ease, border-color .18s ease; }
   }
 </style>
 <script>
@@ -75,7 +87,7 @@
     </div>
   </header>
   <div id="status">加载中…</div>
-  <div id="list"></div>
+  <div class="columns" id="list"></div>
 </main>
 <script>
 (function () {
@@ -259,6 +271,50 @@
     updateThemeLabel();  // 主题按钮提示随语言切换
   }
 
+  /* session → 栏目标题，文案走 i18n，随语言切换 */
+  var SESSION_ORDER = ['session2', 'session3'];
+  var SESSION_TITLE = { session2: 'sessionCrypto', session3: 'sessionStocks' };
+  function sessionTitle(key) { return SESSION_TITLE[key] ? t(SESSION_TITLE[key]) : key; }
+
+  function renderPost(p) {
+    var row = el('div', 'row');
+    var av = el('div', 'avatar');
+    av.setAttribute('role', 'img');
+    av.setAttribute('aria-label', t('avatarAlt'));
+    row.appendChild(av);
+
+    var bubble = el('div', 'bubble');
+    bubble.appendChild(el('div', 'date', fmtPostDate(p.date_local || p.date, state.lang)));
+
+    if (p.reply_context) {
+      var ctx = p.reply_context;
+      var sender = ctx.sender ? t('userSender', { id: ctx.sender }) : t('anonSender');
+      var c = el('div', 'ctx');
+      c.appendChild(el('div', 'date', t('replyLabel', { sender: sender })));
+      c.appendChild(el('div', '', ctx.text || t('nonText')));  // 原文
+      bubble.appendChild(c);
+    }
+
+    if (p.text) bubble.appendChild(el('div', 'text', p.text));  // 原文
+
+    var rel = p.media;
+    if (rel) {
+      var name = rel.split('/').pop();
+      var url = './media/' + encodeURIComponent(name);
+      if (p.media_type === 'photo' && /\.(jpg|jpeg|png|webp|gif)$/i.test(name)) {
+        var img = el('img');
+        img.src = url; img.loading = 'lazy'; img.alt = t('imageAlt');
+        bubble.appendChild(img);
+      } else {
+        var a = el('a', 'file', t('attachment', { name: name }));
+        a.href = url; a.target = '_blank'; a.rel = 'noopener';
+        bubble.appendChild(a);
+      }
+    }
+    row.appendChild(bubble);
+    return row;
+  }
+
   function renderList() {
     var box = get('list');
     var status = get('status');
@@ -278,36 +334,25 @@
     var posts = state.data.posts || [];
     if (!posts.length) { box.appendChild(el('div', 'meta', t('empty'))); return; }
 
+    // 按 session 分栏；旧数据无 session 字段时归入 session3
+    var groups = {};
     posts.forEach(function (p) {
-      var card = el('div', 'card');
-      card.appendChild(el('div', 'date', fmtPostDate(p.date_local || p.date, state.lang)));
+      var k = p.session || 'session3';
+      (groups[k] || (groups[k] = [])).push(p);
+    });
+    var keys = SESSION_ORDER.filter(function (k) { return groups[k]; });
+    Object.keys(groups).sort().forEach(function (k) {
+      if (SESSION_ORDER.indexOf(k) < 0) keys.push(k);
+    });
 
-      if (p.reply_context) {
-        var ctx = p.reply_context;
-        var sender = ctx.sender ? t('userSender', { id: ctx.sender }) : t('anonSender');
-        var c = el('div', 'ctx');
-        c.appendChild(el('div', 'date', t('replyLabel', { sender: sender })));
-        c.appendChild(el('div', '', ctx.text || t('nonText')));  // 原文
-        card.appendChild(c);
-      }
-
-      if (p.text) card.appendChild(el('div', 'text', p.text));  // 原文
-
-      var rel = p.media;
-      if (rel) {
-        var name = rel.split('/').pop();
-        var url = './media/' + encodeURIComponent(name);
-        if (p.media_type === 'photo' && /\.(jpg|jpeg|png|webp|gif)$/i.test(name)) {
-          var img = el('img');
-          img.src = url; img.loading = 'lazy'; img.alt = t('imageAlt');
-          card.appendChild(img);
-        } else {
-          var a = el('a', 'file', t('attachment', { name: name }));
-          a.href = url; a.target = '_blank'; a.rel = 'noopener';
-          card.appendChild(a);
-        }
-      }
-      box.appendChild(card);
+    keys.forEach(function (key) {
+      var col = el('section', 'column');
+      var head = el('div', 'col-head');
+      head.appendChild(el('h2', 'col-title', sessionTitle(key)));
+      head.appendChild(el('span', 'col-count', t('metaCount', { count: groups[key].length })));
+      col.appendChild(head);
+      groups[key].forEach(function (p) { col.appendChild(renderPost(p)); });
+      box.appendChild(col);
     });
   }
 

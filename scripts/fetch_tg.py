@@ -2,14 +2,16 @@
 """把目标群聊全量同步为本地「事实源」，不关心展示逻辑。
 
 只做四件事：
-  1. 读 data/state.json 的游标 last_msg_id（= 全群已同步的最大消息 ID）
+  1. 读 data/<session>/state.json 的游标 last_msg_id（= 全群已同步的最大消息 ID）
   2. 拉取游标之后、指定话题内的**所有成员**消息（不做 from_user 过滤）
-  3. 可选回补最近 N 条的编辑 / 删除
-  4. 写 data/raw/YYYY-MM.json + data/state.json
+  3. 可选回补最近 N 条的编辑 / 删除；补下历史里目标用户缺的图
+  4. 写 data/<session>/raw/YYYY-MM.json + data/<session>/state.json
 
 展示规则一律放在 scripts/build_view.py，改展示不需要重新抓历史。
-话题只由 .env 的 TARGET_TOPIC 指定（0 = 全群）；媒体默认不下载，只记元数据。
-不按发送者做任何筛选：所有成员的消息与媒体一视同仁；目标用户只用于写 state 供展示层过滤。
+一个话题一个 session（data/session2/、data/session3/…），各自独立游标：
+新话题本地先跑一次全量，之后 CI 只做增量。话题由 TARGET_TOPIC 指定（0 = 全群）。
+消息仍全量抓取以保留上下文；媒体只下载**目标用户**发的图片，和 raw 同放在
+data/<session>/ 下，不新增仓库顶层目录。图片随 data/ 一起提交。
 
 配置来源：
   - 本地：仓库根 .env（或环境变量 TG_ENV_FILE 指定路径），参考 .env.example
@@ -93,15 +95,21 @@ SESSION_STR = os.environ["TG_SESSION"]
 TARGET_GROUP = os.environ["TARGET_GROUP"]
 TARGET_USER = os.environ["TARGET_USER"]
 
-RAW_DIR = Path("data/raw")
-MEDIA_DIR = Path("media")
-STATE_FILE = Path("data/state.json")
+# 论坛话题 ID；0 = 抓全群
+TOPIC_ID = int(os.getenv("TARGET_TOPIC", "0") or 0)
+# 一个话题一个目录，各自独立游标；可用 SESSION_ID 覆盖目录名
+SESSION_ID = os.getenv("SESSION_ID") or (f"session{TOPIC_ID}" if TOPIC_ID else "sessionAll")
+SESSION_DIR = Path("data") / SESSION_ID
+RAW_DIR = SESSION_DIR / "raw"
+MEDIA_DIR = SESSION_DIR / "media"
+STATE_FILE = SESSION_DIR / "state.json"
 
 LOCAL_TZ = ZoneInfo(os.getenv("TZ_LOCAL", "Asia/Shanghai"))
-# none | all；不按发送者筛选。默认 none = 只记媒体元数据，不下载文件
-DOWNLOAD_MEDIA = os.getenv("DOWNLOAD_MEDIA", "none").lower()
-# 论坛话题 ID，只从 .env 的 TARGET_TOPIC 读取；0 = 抓全群
-TOPIC_ID = int(os.getenv("TARGET_TOPIC", "0") or 0)
+# none   = 不下图，只记 media_type 元数据
+# target = 只下目标用户发的图片（默认）
+# all    = 下所有人的图片
+# 三档都只处理 photo；视频 / 文档 / 贴纸一律只记元数据
+DOWNLOAD_MEDIA = os.getenv("DOWNLOAD_MEDIA", "target").lower()
 # 每次批量回补最近 N 条，捕获编辑 / 删除；0 = 关闭
 REFRESH_RECENT = int(os.getenv("REFRESH_RECENT", "200"))
 WAIT_TIME = float(os.getenv("WAIT_TIME", "1"))
@@ -164,28 +172,76 @@ def make_record(msg, kind, media_path):
         "text": msg.message or "",  # 图片/文档的 caption 也在这里
         "media": media_path,
         "media_type": kind,
+        "grouped_id": getattr(msg, "grouped_id", None),  # 相册分组，展示层目前不聚合
         "reply_to_msg_id": getattr(reply, "reply_to_msg_id", None) if reply else None,
         "deleted": False,
     }
 
 
-async def maybe_download(msg, kind):
-    if kind not in ("photo", "video", "document"):
+async def maybe_download(msg, kind, target_uid):
+    """返回相对仓库根的图片路径；只处理 photo，target 模式只下目标用户。"""
+    if kind != "photo" or DOWNLOAD_MEDIA == "none":
         return None
-    # 全量：所有成员一视同仁，不按 sender_id 过滤
-    if DOWNLOAD_MEDIA != "all":
+    if DOWNLOAD_MEDIA == "target" and msg.sender_id != target_uid:
         return None
 
-    ext = ".jpg" if kind == "photo" else (getattr(getattr(msg, "file", None), "ext", None) or ".bin")
+    ext = getattr(getattr(msg, "file", None), "ext", None) or ".jpg"
     if not str(ext).startswith("."):
         ext = "." + str(ext)
     MEDIA_DIR.mkdir(parents=True, exist_ok=True)
     dest = MEDIA_DIR / f"{msg.id}{ext}"
     if dest.exists():
-        return f"media/{dest.name}"
+        return dest.as_posix()
     # FloodWaitError 故意不在这里吞：交给主循环中断本轮，游标保持不动
     saved = await msg.download_media(file=str(dest))
-    return f"media/{Path(saved).name}" if saved else None
+    return dest.as_posix() if saved else None
+
+
+async def backfill_media(client, entity, records, target_uid):
+    """补下历史里缺的图：raw 只存元数据，按消息 ID 批量取回原消息再下载。
+
+    已下载的 media 非空 -> 下轮自动跳过，天然断点续传；首次跑一次性补完
+    全部历史图片（几百张），之后每轮只有新增的几张。FloodWait 中断时本轮
+    已补的照常落盘，下一轮继续，不阻塞消息游标。
+    """
+    if DOWNLOAD_MEDIA == "none":
+        return 0
+
+    def pending(r):
+        return (
+            r.get("media_type") == "photo"
+            and not r.get("media")
+            and not r.get("deleted")
+            and (DOWNLOAD_MEDIA == "all" or r.get("sender_id") == target_uid)
+        )
+
+    missing = sorted(mid for mid, r in records.items() if pending(r))
+    if not missing:
+        return 0
+    print(f"[media] 待补 {len(missing)} 张（{SESSION_ID}）")
+    done = 0
+    for i in range(0, len(missing), 100):
+        chunk = missing[i:i + 100]
+        try:
+            fresh = await client.get_messages(entity, ids=chunk)
+        except FloodWaitError as e:
+            print(f"[media] FloodWait {e.seconds}s，本轮补图到此为止")
+            break
+        for m in fresh:
+            if m is None or isinstance(m, MessageEmpty) or not getattr(m, "photo", None):
+                continue
+            if m.id not in records:
+                continue
+            try:
+                # pending 已按 records 的 sender_id 过滤，这里放宽到消息自身，避免重复重试
+                path = await maybe_download(m, "photo", m.sender_id)
+            except FloodWaitError as e:
+                print(f"[media] FloodWait {e.seconds}s，本轮补图到此为止")
+                return done
+            if path:
+                records[m.id]["media"] = path
+                done += 1
+    return done
 
 
 def load_all_raw():
@@ -233,7 +289,10 @@ async def main():
     print(f"游标 last_msg_id={last_id}，本地已有 {len(records)} 条")
 
     entity = parse_entity(TARGET_GROUP)
-    print(f"[config] 目标群 {entity}，话题 {TOPIC_ID or '全部'}，媒体下载 {DOWNLOAD_MEDIA}")
+    print(
+        f"[config] 目标群 {entity}，话题 {TOPIC_ID or '全部'}，"
+        f"session {SESSION_DIR.as_posix()}，媒体 {DOWNLOAD_MEDIA}"
+    )
 
     async with TelegramClient(StringSession(SESSION_STR), API_ID, API_HASH) as client:
         # 目标用户解析成数值 ID，写入 state 供 build_view 使用（展示层不连 TG）
@@ -259,7 +318,7 @@ async def main():
                 kind = media_kind(msg)
                 if not (msg.message or kind):
                     continue  # 无文本无媒体的系统消息
-                path = await maybe_download(msg, kind)
+                path = await maybe_download(msg, kind, target_uid)
                 records[msg.id] = make_record(msg, kind, path)
                 added += 1
             completed = True
@@ -268,12 +327,13 @@ async def main():
             print(f"[fetch] FloodWait {e.seconds}s，本轮到此为止，游标不推进")
 
         changed = await refresh_recent(client, entity, records)
+        media_added = await backfill_media(client, entity, records, target_uid)
 
     new_cursor = seen_max if completed else last_id
     prev = load_json(STATE_FILE, {})
-    # 无新增、无回补、游标与统计都没变 -> 完全不落盘，避免每 20 分钟一次空 commit / 空部署
+    # 无新增、无回补、无补图、游标与统计都没变 -> 完全不落盘，避免空 commit / 空部署
     no_change = (
-        added == 0 and changed == 0
+        added == 0 and changed == 0 and media_added == 0
         and prev.get("target_user_id") == target_uid
         and prev.get("last_msg_id") == new_cursor
         and prev.get("total") == len(records)
@@ -295,7 +355,7 @@ async def main():
     state["total"] = len(records)
     save_json(STATE_FILE, state)
     print(
-        f"新增 {added} 条，回补 {changed} 条，总计 {len(records)} 条，"
+        f"新增 {added} 条，回补 {changed} 条，补图 {media_added} 张，总计 {len(records)} 条，"
         f"游标 {last_id} -> {new_cursor}，月份 {sorted(groups, reverse=True)}"
     )
 

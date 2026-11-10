@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""展示投影：从 data/raw 事实源派生 dist/，不连接 Telegram。
+"""展示投影：从 data/session*/raw 事实源派生 dist/，不连接 Telegram。
 
-当前规则：只展示目标用户的发言。
+当前规则：合并所有话题 session，只展示目标用户的发言。
 以后要加「回复上下文 / 话题聚合 / 关键词筛选」只改本文件，然后重跑即可重放全部历史，
 不需要重新抓取。通过 INCLUDE_CONTEXT=1 可直接开启上下文（默认关闭）。
+媒体路径在 raw 里是相对仓库根的完整路径（data/<session>/media/<msg_id>.jpg），
+投影时只取文件名扁平拷进 dist/media/；同群消息 ID 全局唯一，跨 session 不会撞名。
 
 i18n 说明：语言包 i18n.json 只负责**界面文案**。消息正文 / 回复上下文原文保持 Telegram
 原文，不做简繁转换、不做翻译，避免污染事实源。
@@ -16,9 +18,10 @@ import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 
-RAW_DIR = Path("data/raw")
-STATE_FILE = Path("data/state.json")
+DATA_ROOT = Path("data")
+# 每个话题一个 session：data/session{N}/raw/*.json + data/session{N}/state.json
 I18N_FILE = Path("i18n.json")
+AVATAR_FILE = Path("avatar.webp")  # 前端气泡头像（96x96 WebP，构建时随站点一起发布）
 DIST = Path("dist")
 DIST_DATA = DIST / "data"
 DIST_MEDIA = DIST / "media"
@@ -96,23 +99,34 @@ def with_context(post, by_id):
 def main():
     cfg = validate_i18n(load_json(I18N_FILE, None))
 
-    state = load_json(STATE_FILE, {})
-    uid = state.get("target_user_id")
-
+    sessions = sorted(p for p in DATA_ROOT.glob("session*") if (p / "raw").is_dir())
+    uids = set()
     rows = []
-    for p in sorted(RAW_DIR.glob("*.json")):
-        rows.extend(load_json(p, []))
+    for session_dir in sessions:
+        st = load_json(session_dir / "state.json", {})
+        if st.get("target_user_id"):
+            uids.add(st["target_user_id"])
+        for p in sorted((session_dir / "raw").glob("*.json")):
+            for r in load_json(p, []):
+                r = dict(r)
+                r["session"] = session_dir.name
+                rows.append(r)
+    uid = next(iter(uids), None)
+    # 同一群内 msg.id 全局唯一，跨 session 可直接合并；换群时需改用 (session, id)
     by_id = {r["id"]: r for r in rows}
+    if not sessions:
+        print("警告：data/ 下没有 session*/raw/，请先跑 make fetch")
 
     posts = [
         r for r in rows
-        if not r.get("deleted") and (uid is None or r.get("sender_id") == uid)
+        if not r.get("deleted") and (not uids or r.get("sender_id") in uids)
     ]
     posts.sort(key=lambda r: r["id"], reverse=True)
     if INCLUDE_CONTEXT:
         posts = [with_context(p, by_id) for p in posts]
 
-    # 只把展示真正用到的媒体拷进站点产物，全群图片不对外发布
+    # 只把展示真正用到的媒体拷进站点产物，非目标用户的图片不对外发布
+    # rel = data/<session>/media/<msg_id>.jpg，取 basename 扁平放入 dist/media/
     DIST_MEDIA.mkdir(parents=True, exist_ok=True)
     for post in posts:
         rel = post.get("media")
@@ -132,9 +146,11 @@ def main():
     })
     shutil.copy2(I18N_FILE, DIST / "i18n.json")
     shutil.copy2("index.html", DIST / "index.html")
+    if AVATAR_FILE.exists():
+        shutil.copy2(AVATAR_FILE, DIST / AVATAR_FILE.name)
     print(
-        f"投影完成：{len(posts)} 条展示条目，{len({r['month'] for r in rows})} 个月份，"
-        f"语言 {', '.join(cfg['locales'])}"
+        f"投影完成：{len(posts)} 条展示条目，{len(sessions)} 个 session，"
+        f"{len({r['month'] for r in rows})} 个月份，语言 {', '.join(cfg['locales'])}"
     )
 
 

@@ -39,6 +39,9 @@
       "nonText": "[非文本消息]",
       "attachment": "附件：{name}",
       "imageAlt": "附图",
+      "sessionCrypto": "Crypto",
+      "sessionStocks": "美股",
+      "avatarAlt": "Terry 的头像",
       "themeToDark": "切换到深色主题",
       "themeToLight": "切换到浅色主题"
     },
@@ -58,6 +61,9 @@
       "nonText": "[非文字訊息]",
       "attachment": "附件：{name}",
       "imageAlt": "附圖",
+      "sessionCrypto": "Crypto",
+      "sessionStocks": "美股",
+      "avatarAlt": "Terry 的頭像",
       "themeToDark": "切換至深色主題",
       "themeToLight": "切換至淺色主題"
     },
@@ -77,6 +83,9 @@
       "nonText": "[Non-text message]",
       "attachment": "Attachment: {name}",
       "imageAlt": "Attached image",
+      "sessionCrypto": "Crypto",
+      "sessionStocks": "US Stocks",
+      "avatarAlt": "Terry's avatar",
       "themeToDark": "Switch to dark theme",
       "themeToLight": "Switch to light theme"
     }

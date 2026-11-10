@@ -2,9 +2,9 @@ name: Sync Telegram & Deploy Pages
 
 on:
   schedule:
-    # 每 20 分钟，错峰避开整点高负载。GitHub cron 按 UTC、最小粒度 5 分钟、
+    # 每半小时，错峰避开整点高负载。GitHub cron 按 UTC、最小粒度 5 分钟、
     # 为 best-effort（高负载会延迟或整次跳过），公共仓库 60 天无活动会自动停用。
-    - cron: "7,27,47 * * * *"
+    - cron: "7,37 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -23,6 +23,17 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    # 两个话题共用同一账号凭证；WAIT_TIME 不注入（脚本无空串兜底，保持默认 1）
+    env:
+      TG_API_ID: ${{ secrets.TG_API_ID }}
+      TG_API_HASH: ${{ secrets.TG_API_HASH }}
+      TG_SESSION: ${{ secrets.TG_SESSION }}
+      TARGET_GROUP: "-1002632177660"
+      TARGET_USER: "hackbearterry"
+      TZ_LOCAL: Asia/Shanghai
+      # target = 只下目标用户发的图片，存 data/<session>/media/，随 data/ 一起提交
+      DOWNLOAD_MEDIA: target
+      REFRESH_RECENT: "200"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,22 +50,18 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
-      # ---- 1. 事实源：全群全量/增量拉取，与展示无关 ----
+      # ---- 1. 事实源：每个话题一个 session、各自独立游标，CI 只做增量 ----
       # GITHUB_ACTIONS=true 时 fetch_tg.py 跳过 .env，脚本读取的配置只能在此注入。
-      # 未配置的 Secret 展开为空串，脚本按各自默认值回落（TARGET_TOPIC 空 = 0 = 全群）。
-      # WAIT_TIME 不注入：脚本 float(os.getenv("WAIT_TIME", "1")) 无空串兜底，保持默认 1。
-      - name: Fetch raw chat
+      # 话题2 的首次全量在本地完成（生成 data/session2/ 并提交），CI 只拉游标之后的新消息。
+      # 串行执行，避免同一 StringSession 并发连接；补图逻辑会顺带补齐历史里目标用户缺的图。
+      - name: Fetch topic 2 (incremental)
         env:
-          TG_API_ID: ${{ secrets.TG_API_ID }}
-          TG_API_HASH: ${{ secrets.TG_API_HASH }}
-          TG_SESSION: ${{ secrets.TG_SESSION }}
-          TARGET_GROUP: "-1002632177660"
-          TARGET_USER: "hackbearterry"
+          TARGET_TOPIC: "2"
+        run: python scripts/fetch_tg.py
+
+      - name: Fetch topic 3 (incremental)
+        env:
           TARGET_TOPIC: "3"
-          TZ_LOCAL: Asia/Shanghai
-          # none = 只记媒体元数据：record.media 为 null，dist 不产出图片/附件
-          DOWNLOAD_MEDIA: none
-          REFRESH_RECENT: "200"
         run: python scripts/fetch_tg.py
 
       # ---- 2. 展示投影：从 raw 重算，改规则不用重抓 ----
@@ -73,18 +80,17 @@ jobs:
           ANONYMIZE_CONTEXT: "1"
         run: python scripts/build_view.py
 
-      # ---- 3. 只提交事实源，dist/ 由 .gitignore 排除 ----
+      # ---- 3. 只提交事实源（含目标用户图片），dist/ 由 .gitignore 排除 ----
       - name: Commit raw data
         id: git_check
         run: |
-          mkdir -p data/raw media dist
+          mkdir -p data dist
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           # 不带 pathspec：目录为空时也不会报 "did not match any files"
-          # dist/ 由 .gitignore 排除，实际只会提交 data/ 与 media/
-          # fetch_tg.py 的游标按全群推进：非目标用户 / 非目标话题的消息也会更新
-          # state.json 的 last_msg_id，因此这里的 diff 判定的是「全群有无新消息」，
-          # 不等于「站点有无新内容」。
+          # 实际只提交 data/session*/ 下的 raw / media / state.json
+          # 每个 session 的游标各自按全群推进：非目标话题的消息也会推进 last_msg_id，
+          # 因此这里的 diff 判定的是「全群有无新消息」，不等于「站点有无新内容」。
           git add -A
           if git diff --staged --quiet; then
             echo "has_changes=false" >> "$GITHUB_OUTPUT"

@@ -9,7 +9,7 @@
 
 数据准备（二选一）：
     python3 scripts/mock_data.py                 # mock 数据（当前状态）
-    python3 scripts/build_view.py               # 已抓到 data/raw/ 后，用真实数据重建 dist/
+    python3 scripts/build_view.py               # 已抓到 data/session*/raw/ 后，用真实数据重建 dist/
 """
 from __future__ import annotations
 
