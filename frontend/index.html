@@ -169,7 +169,7 @@
       z-index: 1;
       width: 100%;
       height: 100%;
-      padding: 0 1.25rem 0 3rem;
+      padding: 0 3.25rem 0 3rem;
       border: 0;
       outline: none;
       box-shadow: none;
@@ -314,6 +314,400 @@
       display: block;
     }
 
+    /* ---------- 双栏页面组件（消息卡片本体不在此列，保持原样） ---------- */
+    .tg-panel {
+      background: #fff;
+      border: 1px solid rgb(226 232 240 / 90%);
+      border-radius: .75rem;
+      padding: 1rem;
+      box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
+    }
+
+    .dark .tg-panel {
+      background: #1e293b;
+      border-color: #334155;
+    }
+
+    .tg-toolbar {
+      padding: .625rem 1rem;
+    }
+
+    .tg-panel-title {
+      font-size: .8125rem;
+      font-weight: 600;
+      color: #0f172a;
+      margin: 0 0 .625rem;
+    }
+
+    .dark .tg-panel-title {
+      color: #e2e8f0;
+    }
+
+    .tg-muted {
+      font-size: .75rem;
+      color: #94a3b8;
+    }
+
+    .tg-stat {
+      background: #f1f5f9;
+      border-radius: .5rem;
+      padding: .5rem .625rem;
+    }
+
+    .dark .tg-stat {
+      background: #0f172a;
+    }
+
+    .tg-stat-label {
+      font-size: .6875rem;
+      color: #64748b;
+      margin: 0;
+    }
+
+    .dark .tg-stat-label {
+      color: #94a3b8;
+    }
+
+    .tg-stat-num {
+      font-size: 1.125rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: #0f172a;
+      margin: .125rem 0 0;
+      line-height: 1.25;
+    }
+
+    .dark .tg-stat-num {
+      color: #f1f5f9;
+    }
+
+    .tg-nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      gap: .5rem;
+      padding: .5rem .625rem;
+      border: 0;
+      border-radius: .5rem;
+      background: transparent;
+      color: #334155;
+      font-size: .8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .tg-nav-item:hover,
+    .tg-month-btn:hover {
+      background: #f1f5f9;
+    }
+
+    .dark .tg-nav-item {
+      color: #cbd5e1;
+    }
+
+    .dark .tg-nav-item:hover,
+    .dark .tg-month-btn:hover {
+      background: #0f172a;
+    }
+
+    .tg-nav-item.is-active {
+      background: #e6f1fb;
+      color: #0c447c;
+    }
+
+    .dark .tg-nav-item.is-active {
+      background: #1e3a5f;
+      color: #bfdbfe;
+    }
+
+    .tg-nav-item:focus-visible,
+    .tg-month-btn:focus-visible,
+    .tg-sort-btn:focus-visible,
+    .tg-bell:focus-visible,
+    .tg-sub-close:focus-visible,
+    .tg-back-top:focus-visible,
+    .tg-sub-btn:focus-visible,
+    .tg-sub-input:focus-visible {
+      outline: 2px solid #3b82f6;
+      outline-offset: 2px;
+    }
+
+    .tg-nav-count,
+    .tg-month-count {
+      font-size: .6875rem;
+      font-variant-numeric: tabular-nums;
+      color: #94a3b8;
+    }
+
+    .tg-nav-item.is-active .tg-nav-count {
+      color: #185fa5;
+    }
+
+    .tg-bar {
+      height: 3px;
+      border-radius: 2px;
+      background: #e2e8f0;
+      overflow: hidden;
+      margin-top: .625rem;
+    }
+
+    .dark .tg-bar {
+      background: #334155;
+    }
+
+    .tg-bar>span {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: #3b82f6;
+      border-radius: 2px;
+      transition: width 200ms ease;
+    }
+
+    .tg-month-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      gap: .5rem;
+      padding: .375rem .625rem;
+      border: 0;
+      border-radius: .5rem;
+      background: transparent;
+      color: #475569;
+      font-size: .75rem;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .dark .tg-month-btn {
+      color: #94a3b8;
+    }
+
+    .tg-month-btn.is-active {
+      background: #f1f5f9;
+      color: #185fa5;
+    }
+
+    .dark .tg-month-btn.is-active {
+      background: #0f172a;
+      color: #93c5fd;
+    }
+
+    .tg-month-head {
+      position: sticky;
+      top: .5rem;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      width: fit-content;
+      gap: .5rem;
+      margin: .25rem 0 .75rem;
+      padding: .25rem .75rem;
+      border-radius: 999px;
+      background: #fef3c7;
+      color: #92400e;
+      font-size: .75rem;
+      font-weight: 600;
+    }
+
+    .dark .tg-month-head {
+      background: #422006;
+      color: #fcd34d;
+    }
+
+    .tg-sub-input {
+      width: 100%;
+      min-width: 0;
+      padding: .5rem .625rem;
+      font-size: .75rem;
+      border: 1px solid #e2e8f0;
+      border-radius: .5rem;
+      background: #fff;
+      color: #0f172a;
+      outline: none;
+    }
+
+    .dark .tg-sub-input {
+      background: #0f172a;
+      border-color: #334155;
+      color: #f1f5f9;
+    }
+
+    .tg-sub-input:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgb(59 130 246 / 25%);
+    }
+
+    .tg-sub-btn {
+      padding: .5rem .75rem;
+      font-size: .75rem;
+      font-weight: 500;
+      color: #fff;
+      background: #2563eb;
+      border: 0;
+      border-radius: .5rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .tg-sub-btn:hover {
+      background: #1d4ed8;
+    }
+
+    .tg-bell,
+    .tg-sub-close,
+    .tg-sort-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .25rem;
+      border: 0;
+      border-radius: .5rem;
+      background: transparent;
+      color: #64748b;
+      cursor: pointer;
+    }
+
+    .tg-bell {
+      padding: .375rem;
+    }
+
+    .tg-sub-close {
+      padding: .25rem;
+    }
+
+    .tg-sort-btn {
+      padding: .25rem .5rem;
+      font-size: .6875rem;
+    }
+
+    .tg-bell:hover,
+    .tg-sub-close:hover,
+    .tg-sort-btn:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .dark .tg-bell:hover,
+    .dark .tg-sub-close:hover,
+    .dark .tg-sort-btn:hover {
+      background: #0f172a;
+      color: #f1f5f9;
+    }
+
+    .tg-sentinel {
+      padding: .75rem;
+      text-align: center;
+      font-size: .75rem;
+      color: #94a3b8;
+    }
+
+    .tg-skeleton {
+      height: 5.5rem;
+      margin-bottom: .75rem;
+      border-radius: .75rem;
+      background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+      background-size: 200% 100%;
+      animation: tgShimmer 1.4s ease-in-out infinite;
+    }
+
+    #list>.tg-skeleton:first-child {
+      margin-top: 1.75rem;
+    }
+
+    .dark .tg-skeleton {
+      background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+      background-size: 200% 100%;
+    }
+
+    @keyframes tgShimmer {
+      from { background-position: 200% 0; }
+      to { background-position: -200% 0; }
+    }
+
+    .tg-kbd {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 1.25rem;
+      height: 1.25rem;
+      padding: 0 .25rem;
+      border: 1px solid rgb(148 163 184 / 55%);
+      border-radius: .25rem;
+      font-size: .6875rem;
+      color: #64748b;
+      pointer-events: none;
+    }
+
+    .dark .tg-kbd {
+      color: #94a3b8;
+    }
+
+    .tg-back-top {
+      display: none;
+      position: fixed;
+      right: 1.25rem;
+      bottom: 6.75rem;
+      z-index: 30;
+      width: 2.5rem;
+      height: 2.5rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 999px;
+      background: #fff;
+      color: #475569;
+    }
+
+    .dark .tg-back-top {
+      background: #1e293b;
+      border-color: #334155;
+      color: #cbd5e1;
+    }
+
+    .tg-back-top.is-visible {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tg-panel.is-flash {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgb(59 130 246 / 20%);
+    }
+
+    .tg-is-hidden {
+      display: none !important;
+    }
+
+    .tg-desktop-only {
+      display: none;
+    }
+
+    #subscribe-card {
+      display: none;
+    }
+
+    #subscribe-card.is-open {
+      display: block !important;
+    }
+
+    @media (min-width: 1024px) {
+      .tg-desktop-only { display: block; }
+      #subscribe-card:not(.tg-dismissed) { display: block; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .tg-skeleton { animation: none; }
+      .tg-bar>span { transition: none; }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       .liquid-glass-surface::after {
         transition: none;
@@ -334,44 +728,104 @@
 </head>
 
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans antialiased">
-  <div class="max-w-6xl mx-auto px-4 py-8">
+  <div class="max-w-5xl mx-auto px-4 py-6 lg:py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start">
 
-    <header
-      class="flex flex-wrap items-start justify-between gap-4 pb-4 mb-6 border-b border-slate-200 dark:border-slate-700">
-      <div class="flex items-center gap-3 min-w-0">
-        <div class="avatar shrink-0">
-          <div class="w-12 h-12 rounded-full ring-1 ring-slate-200 dark:ring-slate-700">
-            <img id="header-avatar" src="./avatar.webp" alt="Terry 的头像" class="w-12 h-12 rounded-full object-cover">
+      <!-- 左栏：资料 / 统计 / 分组 / 订阅 / 月份目录；大屏 sticky，小屏自动回单列 -->
+      <aside class="lg:col-span-4 lg:sticky lg:top-6 space-y-3 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto lg:pr-1">
+
+        <header class="tg-panel">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="avatar shrink-0">
+              <div class="w-12 h-12 rounded-full ring-1 ring-slate-200 dark:ring-slate-700">
+                <img id="header-avatar" src="./avatar.webp" alt="Terry 的头像" class="w-12 h-12 rounded-full object-cover">
+              </div>
+            </div>
+            <div class="min-w-0">
+              <h1 id="title" class="text-base font-bold text-slate-900 dark:text-slate-100 truncate">Terry · Message Archive</h1>
+              <span id="meta" class="block min-h-4 text-xs text-slate-500 dark:text-slate-400"></span>
+            </div>
           </div>
-        </div>
-        <div class="min-w-0">
-          <h1 id="title" class="text-xl font-bold text-slate-900 dark:text-slate-100 truncate">Terry · Message Archive
-          </h1>
-          <span id="meta" class="block min-h-4 text-xs text-slate-500 dark:text-slate-400"></span>
-        </div>
-      </div>
-      <div class="shrink-0">
-        <div
-          class="inline-flex items-center gap-1 bg-slate-200/70 dark:bg-slate-800/70 p-1 rounded-lg text-xs font-medium">
-          <div id="lang" class="inline-flex gap-1" role="group" aria-label="语言"></div>
-          <button id="themeBtn" type="button" data-lucide="moon" aria-pressed="false"
-            class="btn btn-xs btn-square btn-ghost text-slate-500 dark:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"></button>
-        </div>
-      </div>
-    </header>
 
-    <!-- 搜索栏已移到 body 末尾：fixed 常驻底部居中，不随滚动 -->
+          <div class="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
+            <div id="lang" class="inline-flex gap-1" role="group" aria-label="语言"></div>
+            <div class="flex items-center gap-1">
+              <button id="subscribeBell" type="button" class="tg-bell" aria-label="订阅更新通知"></button>
+              <button id="themeBtn" type="button" data-lucide="moon" aria-pressed="false"
+                class="btn btn-xs btn-square btn-ghost text-slate-500 dark:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"></button>
+            </div>
+          </div>
 
-    <div id="sessions"
-      class="tabs tabs-boxed w-fit gap-1 min-h-[2.75rem] bg-slate-200/70 dark:bg-slate-800/70 p-1 rounded-lg text-sm font-medium mb-6"
-      role="group" aria-label="分组"></div>
+          <div class="grid grid-cols-2 gap-2 mt-3">
+            <div class="tg-stat">
+              <p class="tg-stat-label" id="stat-posts-label">消息总数</p>
+              <p class="tg-stat-num" id="stat-posts">—</p>
+            </div>
+            <div class="tg-stat">
+              <p class="tg-stat-label" id="stat-sessions-label">频道</p>
+              <p class="tg-stat-num" id="stat-sessions">—</p>
+            </div>
+            <div class="tg-stat">
+              <p class="tg-stat-label" id="stat-months-label">跨度</p>
+              <p class="tg-stat-num" id="stat-months">—</p>
+            </div>
+            <div class="tg-stat">
+              <p class="tg-stat-label" id="stat-media-label">配图</p>
+              <p class="tg-stat-num" id="stat-media">—</p>
+            </div>
+          </div>
+        </header>
 
-    <!-- 列表区固定留位；状态文字绝对定位，显隐不占流，避免「加载中 → 空态」整块上移 -->
-    <div class="relative min-h-[60vh]">
-      <div id="status" class="absolute inset-x-0 top-0 text-sm text-slate-500 dark:text-slate-400">加载中…</div>
-      <div id="list"></div>
+        <section class="tg-panel" aria-labelledby="sessions-title">
+          <h2 id="sessions-title" class="tg-panel-title">频道分组</h2>
+          <div id="sessions" class="space-y-1" role="group" aria-label="分组"></div>
+          <div class="tg-bar"><span id="session-bar"></span></div>
+        </section>
+
+        <section id="subscribe-card" class="tg-panel" aria-labelledby="subscribe-title">
+          <div class="flex items-start justify-between gap-2">
+            <h2 id="subscribe-title" class="tg-panel-title" style="margin-bottom:.25rem">订阅更新通知</h2>
+            <button id="subscribeClose" type="button" class="tg-sub-close" aria-label="关闭订阅卡片"></button>
+          </div>
+          <p id="subscribe-desc" class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-3">归档有重要观点汇总时，第一时间邮件提醒。</p>
+          <form id="subscribe-form" class="flex items-center gap-2">
+            <input id="subscribe-email" type="email" required class="tg-sub-input" placeholder="输入你的邮箱…" aria-label="邮箱地址">
+            <button id="subscribe-btn" type="submit" class="tg-sub-btn">订阅</button>
+          </form>
+          <p id="subscribe-feedback" class="tg-is-hidden text-xs mt-2 text-blue-600 dark:text-blue-400"></p>
+        </section>
+
+        <section class="tg-panel tg-desktop-only" aria-labelledby="timeline-title">
+          <h2 id="timeline-title" class="tg-panel-title">时间轴目录</h2>
+          <div id="month-nav" class="space-y-0.5 max-h-64 overflow-y-auto"></div>
+        </section>
+      </aside>
+
+      <!-- 右栏：工具条 + 消息流；消息卡片本体保持原样 -->
+      <main class="lg:col-span-8 min-w-0">
+        <div class="tg-panel tg-toolbar flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div class="flex items-baseline gap-2 min-w-0">
+            <span id="toolbar-title" class="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">美股</span>
+            <span id="toolbar-count" class="text-xs text-slate-500 dark:text-slate-400"></span>
+          </div>
+          <button id="sortBtn" type="button" class="tg-sort-btn shrink-0" aria-label="切换排序"></button>
+        </div>
+
+        <!-- 列表区固定留位；状态文字绝对定位，显隐不占流 -->
+        <div class="relative min-h-[60vh]">
+          <div id="status" class="absolute inset-x-0 top-0 text-sm text-slate-500 dark:text-slate-400">加载中…</div>
+          <div id="list">
+            <div class="tg-skeleton"></div>
+            <div class="tg-skeleton"></div>
+            <div class="tg-skeleton"></div>
+          </div>
+          <div id="sentinel" class="tg-sentinel" aria-live="polite"></div>
+        </div>
+      </main>
     </div>
   </div>
+
+  <button id="backTop" type="button" class="tg-back-top" aria-label="回到顶部"></button>
 
   <!-- 底部常驻搜索栏：玻璃层与内容层分离，折射由 canvas SDF → feDisplacementMap 驱动 -->
   <div class="liquid-glass-search" id="search-wrap" role="search">
@@ -395,6 +849,7 @@
     </svg>
     <input id="search-input" type="search" placeholder="搜索消息…" autocomplete="off" aria-label="搜索消息"
       class="liquid-search-input">
+    <kbd id="search-kbd" class="tg-kbd" aria-hidden="true">/</kbd>
   </div>
 
   <!-- 图片放大层：display 由 hidden / flex 互斥切换，点背景或按 Esc 关闭 -->
@@ -412,7 +867,14 @@
       var FALLBACK = 'zh-CN';
       var STORE_KEY = 'tg-archive-lang';
       var THEME_KEY = 'tg-archive-theme';
-      var state = { cfg: null, data: null, lang: FALLBACK, failed: null, session: 'session3', query: '' };
+      var SUB_KEY = 'tg-archive-subscribed';
+      var SUB_HIDE_KEY = 'tg-archive-subscribe-dismissed';
+      var PAGE_SIZE = 30;
+      var state = {
+        cfg: null, data: null, lang: FALLBACK, failed: null,
+        session: 'session3', query: '', limit: PAGE_SIZE, sort: 'desc'
+      };
+      var view = { posts: [], rendered: 0, lastMonth: '' };
       var themeReady = false;
 
       /* Tailwind 类名 + daisyUI 组件类集中管理，避免散落的自定义 CSS */
@@ -453,7 +915,9 @@
         copy: '<rect x="8" y="8" width="14" height="14" rx="2" ry="2"/>' +
           '<path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
         check: '<path d="M20 6 9 17l-5-5"/>',
-        x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>'
+        x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+        bell: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
+        arrowUp: '<path d="M12 19V5"/><path d="m5 12 7-7 7 7"/>'
       };
       function iconSvg(name) {
         return '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
@@ -607,24 +1071,146 @@
           Object.keys(seen).filter(function (k) { return SESSION_ORDER.indexOf(k) < 0; }).sort()
         );
       }
+      function allPosts() { return (state.data && state.data.posts) || []; }
+      function countBySession() {
+        var c = {};
+        allPosts().forEach(function (p) { var k = p.session || 'session3'; c[k] = (c[k] || 0) + 1; });
+        return c;
+      }
+      function monthOf(p) {
+        if (p.month) return String(p.month).slice(0, 7);
+        var s = String(p.date_local || p.date || '');
+        return /^\d{4}-\d{2}/.test(s) ? s.slice(0, 7) : '';
+      }
+      function monthLabel(m) {
+        var a = String(m).split('-');
+        return t('monthLabel', { year: a[0] || '', month: String(+a[1] || 0) });
+      }
+      function fmtNum(n) { return Number(n || 0).toLocaleString('en-US'); }
+
+      /* ---------- 左栏：统计 / 分组 / 月份目录 / 订阅 ---------- */
+      function renderStats() {
+        var labels = { posts: 'statPosts', sessions: 'statSessions', months: 'statMonths', media: 'statMedia' };
+        Object.keys(labels).forEach(function (k) {
+          get('stat-' + k + '-label').textContent = t(labels[k]);
+        });
+        var ps = allPosts(), months = {}, media = 0;
+        ps.forEach(function (p) {
+          var m = monthOf(p); if (m) months[m] = 1;
+          if (p.media && p.media !== 'None' && p.media !== 'null') media++;
+        });
+        get('stat-posts').textContent = state.data ? fmtNum(state.data.count || ps.length) : '—';
+        get('stat-sessions').textContent = state.data ? fmtNum(sessionKeys().length) : '—';
+        get('stat-months').textContent = state.data ? t('monthUnit', { count: Object.keys(months).length }) : '—';
+        get('stat-media').textContent = state.data ? fmtNum(media) : '—';
+      }
       function renderSessionTabs() {
         var box = get('sessions');
         box.textContent = '';
         box.setAttribute('aria-label', t('sessionLabel'));
-        sessionKeys().forEach(function (key) {
+        get('sessions-title').textContent = t('sessionNav');
+        var counts = countBySession(), keys = sessionKeys(), total = 0;
+        keys.forEach(function (k) { total += counts[k] || 0; });
+        keys.forEach(function (key) {
           var on = key === state.session;
-          var b = el('button', TAB_BASE + ' ' + (on ? TAB_ACTIVE : TAB_IDLE), sessionTitle(key));
+          var b = el('button', 'tg-nav-item' + (on ? ' is-active' : ''));
           b.type = 'button';
           b.setAttribute('data-session', key);
           b.setAttribute('aria-pressed', on ? 'true' : 'false');
+          b.appendChild(el('span', '', sessionTitle(key)));
+          b.appendChild(el('span', 'tg-nav-count', fmtNum(counts[key])));
           b.addEventListener('click', function () { setSession(key); });
           box.appendChild(b);
         });
+        get('session-bar').style.width = (total ? Math.round((counts[state.session] || 0) / total * 100) : 0) + '%';
       }
       function setSession(key) {
         state.session = key;
+        state.limit = PAGE_SIZE;
         renderSessionTabs();
         renderList();
+      }
+      function renderMonthNav() {
+        var box = get('month-nav');
+        box.textContent = '';
+        get('timeline-title').textContent = t('timelineTitle');
+        var counts = {};
+        var ps = view.posts.length ? view.posts : allPosts().filter(function (p) {
+          return (p.session || 'session3') === state.session;
+        });
+        ps.forEach(function (p) {
+          var m = monthOf(p); if (m) counts[m] = (counts[m] || 0) + 1;
+        });
+        var keys = Object.keys(counts).sort().reverse();
+        if (!keys.length) { box.appendChild(el('p', 'tg-muted', t('timelineEmpty'))); return; }
+        keys.forEach(function (m) {
+          var b = el('button', 'tg-month-btn');
+          b.type = 'button';
+          b.setAttribute('data-month', m);
+          b.appendChild(el('span', '', monthLabel(m)));
+          b.appendChild(el('span', 'tg-month-count', fmtNum(counts[m])));
+          b.addEventListener('click', function () { jumpToMonth(m); });
+          box.appendChild(b);
+        });
+      }
+      function highlightMonth(m) {
+        Array.prototype.forEach.call(document.querySelectorAll('#month-nav .tg-month-btn'), function (b) {
+          b.classList.toggle('is-active', b.getAttribute('data-month') === m);
+        });
+      }
+      function jumpToMonth(m) {
+        var idx = -1;
+        for (var i = 0; i < view.posts.length; i++) {
+          if (monthOf(view.posts[i]) === m) { idx = i; break; }
+        }
+        if (idx < 0) return;
+        state.limit = Math.max(state.limit, idx + PAGE_SIZE);
+        if (idx >= view.rendered) appendUntil(state.limit);
+        var head = get('month-' + m);
+        if (head) {
+          head.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          highlightMonth(m);
+        }
+      }
+      function updateMonthHighlight() {
+        var heads = document.querySelectorAll('#list .tg-month-head[data-month]');
+        if (!heads.length) return;
+        var active = heads[0].getAttribute('data-month');
+        for (var i = 0; i < heads.length; i++) {
+          if (heads[i].getBoundingClientRect().top <= 140) active = heads[i].getAttribute('data-month');
+          else break;
+        }
+        highlightMonth(active);
+      }
+      function renderToolbar() {
+        var keys = sessionKeys();
+        var key = keys.indexOf(state.session) >= 0 ? state.session : keys[0];
+        get('toolbar-title').textContent = sessionTitle(key);
+        get('toolbar-count').textContent = state.query.trim()
+          ? t('resultHits', { hits: view.posts.length })
+          : t('resultTotal', { count: view.posts.length });
+        var btn = get('sortBtn');
+        btn.textContent = t(state.sort === 'desc' ? 'sortNew' : 'sortOld');
+        btn.setAttribute('aria-label', t('sortToggle'));
+      }
+      function renderSubscribe() {
+        get('subscribe-title').textContent = t('subscribeTitle');
+        get('subscribe-desc').textContent = t('subscribeDesc');
+        get('subscribe-email').placeholder = t('subscribePlaceholder');
+        get('subscribe-email').setAttribute('aria-label', t('subscribePlaceholder'));
+        get('subscribe-btn').textContent = t('subscribeBtn');
+        get('subscribeClose').setAttribute('aria-label', t('subscribeClose'));
+        get('subscribeBell').setAttribute('aria-label', t('subscribeBell'));
+        get('backTop').setAttribute('aria-label', t('backTop'));
+        var done = false, dismissed = false;
+        try {
+          done = localStorage.getItem(SUB_KEY) === '1';
+          dismissed = localStorage.getItem(SUB_HIDE_KEY) === '1';
+        } catch (e) { }
+        get('subscribe-card').classList.toggle('tg-dismissed', dismissed);
+        get('subscribe-form').classList.toggle('tg-is-hidden', done);
+        get('subscribe-feedback').classList.toggle('tg-is-hidden', !done);
+        if (done) get('subscribe-feedback').textContent = t('subscribeDone');
       }
 
       function setStatus(text) {
@@ -653,7 +1239,11 @@
         get('search-input').setAttribute('aria-label', t('searchPlaceholder'));
         get('header-avatar').alt = t('avatarAlt');
         updateLangButtons();
+        renderStats();
         renderSessionTabs();
+        renderMonthNav();
+        renderToolbar();
+        renderSubscribe();
         updateThemeLabel();
       }
 
@@ -754,11 +1344,11 @@
       }
 
       /* 引用块：页面上一律不展示发言者数字 ID。引用群友显示「群友 / Group member」，
-         引用博主自己的旧消息显示「博主 / Author」，配色与 Telegram 回复气泡一致。 */
+         引用博主自己的旧消息直接显示 Terry（专有名词，不走 i18n），配色与 Telegram 回复气泡一致。 */
       function renderQuote(ctx) {
         var missing = !!ctx.missing;
         var q = el('blockquote', 'tg-quote' + (missing ? ' is-missing' : ''));
-        var sender = ctx.is_self ? t('author') : t('anonSender');
+        var sender = ctx.is_self ? 'Terry' : t('anonSender');
         q.setAttribute('aria-label', t('quoteAria', { sender: sender }));
         q.appendChild(el('span', 'tg-quote-name', sender));
 
@@ -854,17 +1444,82 @@
         return card;
       }
 
+      /* ---------- 消息流：分批渲染 ----------
+         renderPost() / 消息卡片本体一字未改；这里只控制「渲染几条、何时追加、月份锚点」。 */
+      function appendUntil(n) {
+        var box = get('list');
+        var frag = document.createDocumentFragment();
+        var cards = [];
+        var target = Math.min(n, view.posts.length);
+        var monthCounts = {};
+        view.posts.forEach(function (p) {
+          var m = monthOf(p); if (m) monthCounts[m] = (monthCounts[m] || 0) + 1;
+        });
+        while (view.rendered < target) {
+          var p = view.posts[view.rendered];
+          var m = monthOf(p);
+          if (m && m !== view.lastMonth) {
+            var head = el('div', 'tg-month-head');
+            head.id = 'month-' + m;
+            head.setAttribute('data-month', m);
+            head.appendChild(el('span', '', monthLabel(m)));
+            head.appendChild(el('span', '', t('monthCount', { count: monthCounts[m] })));
+            frag.appendChild(head);
+            view.lastMonth = m;
+          }
+          var card = renderPost(p);
+          frag.appendChild(card);
+          cards.push(card);
+          view.rendered++;
+        }
+        box.appendChild(frag);
+        // 逐卡测量：卡片已入文档，引用块 scrollWidth 有效；不重复绑定已渲染卡片
+        cards.forEach(function (c) { initQuoteExpand(c); });
+        updateSentinel();
+      }
+      function updateSentinel() {
+        var s = get('sentinel');
+        var total = view.posts.length;
+        if (!total) { s.textContent = ''; return; }
+        s.textContent = view.rendered < total
+          ? t('loadMore', { shown: view.rendered, total: total })
+          : t('loadAll', { total: total });
+      }
+      function checkSentinel() {
+        if (view.rendered >= view.posts.length) return;
+        var r = get('sentinel').getBoundingClientRect();
+        if (r.top < window.innerHeight + 400) {
+          state.limit += PAGE_SIZE;
+          appendUntil(state.limit);
+          requestAnimationFrame(checkSentinel);
+        }
+      }
+      function initSentinelObserver() {
+        var s = get('sentinel');
+        if (!('IntersectionObserver' in window)) {
+          window.addEventListener('scroll', checkSentinel, { passive: true });
+          return;
+        }
+        new IntersectionObserver(function (entries) {
+          if (entries.length && entries[0].isIntersecting) requestAnimationFrame(checkSentinel);
+        }, { rootMargin: '400px 0px' }).observe(s);
+      }
+
       function renderList() {
         var box = get('list');
         box.textContent = '';
-        if (state.failed) { setStatus(t('loadError', { error: state.failed })); return; }
-        if (!state.data) { setStatus(t('loading')); return; }
+        if (state.failed) { setStatus(t('loadError', { error: state.failed })); get('sentinel').textContent = ''; return; }
+        if (!state.data) {
+          setStatus(t('loading'));
+          for (var i = 0; i < 3; i++) box.appendChild(el('div', 'tg-skeleton'));
+          return;
+        }
         setStatus(null);
 
         var keys = sessionKeys();
         var key = keys.indexOf(state.session) >= 0 ? state.session : keys[0];
         var q = state.query.trim().toLowerCase();
-        var posts = (state.data.posts || []).filter(function (p) {
+        var posts = allPosts().filter(function (p) {
           return (p.session || 'session3') === key;
         });
         if (q) {
@@ -873,18 +1528,29 @@
             return hay.toLowerCase().indexOf(q) >= 0;
           });
         }
+        if (state.sort === 'asc') posts = posts.slice().reverse();
+
+        view.posts = posts;
+        view.rendered = 0;
+        view.lastMonth = '';
+
+        renderToolbar();
+        renderMonthNav();
 
         if (!posts.length) {
           box.appendChild(el('div', CLS_EMPTY, q ? t('searchEmpty') : t('empty')));
+          get('sentinel').textContent = '';
           return;
         }
-        posts.forEach(function (p) { box.appendChild(renderPost(p)); });
-        initQuoteExpand(box);   // 卡片入文档后再测量引用文本是否被截断
+        appendUntil(state.limit);
+        updateMonthHighlight();
+        requestAnimationFrame(checkSentinel);
       }
 
       function setLang(code) {
         state.lang = pick(code, state.cfg);
         save(state.lang);
+        state.limit = PAGE_SIZE;
         renderChrome();
         renderList();
       }
@@ -902,8 +1568,59 @@
 
       get('search-input').addEventListener('input', function (e) {
         state.query = e.target.value || '';
+        state.limit = PAGE_SIZE;
         renderList();
       });
+
+      get('subscribeBell').innerHTML = iconSvg('bell');
+      get('subscribeClose').innerHTML = iconSvg('x');
+      get('backTop').innerHTML = iconSvg('arrowUp');
+
+      get('sortBtn').addEventListener('click', function () {
+        state.sort = state.sort === 'desc' ? 'asc' : 'desc';
+        state.limit = PAGE_SIZE;
+        renderList();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+
+      // 纯前端订阅：只记本地状态与内联提示，不请求任何服务
+      get('subscribe-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var input = get('subscribe-email');
+        if (!input.checkValidity()) { input.reportValidity(); return; }
+        try { localStorage.setItem(SUB_KEY, '1'); } catch (err) { }
+        get('subscribe-form').classList.add('tg-is-hidden');
+        var fb = get('subscribe-feedback');
+        fb.textContent = t('subscribeDone');
+        fb.classList.remove('tg-is-hidden');
+      });
+      get('subscribeBell').addEventListener('click', function () {
+        var card = get('subscribe-card');
+        card.classList.remove('tg-dismissed');
+        card.classList.add('is-open');
+        try { localStorage.removeItem(SUB_HIDE_KEY); } catch (err) { }
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        card.classList.add('is-flash');
+        setTimeout(function () { card.classList.remove('is-flash'); }, 1600);
+        setTimeout(function () {
+          if (!get('subscribe-form').classList.contains('tg-is-hidden')) {
+            get('subscribe-email').focus({ preventScroll: true });
+          }
+        }, 350);
+      });
+      get('subscribeClose').addEventListener('click', function () {
+        var card = get('subscribe-card');
+        card.classList.add('tg-dismissed');
+        card.classList.remove('is-open');
+        try { localStorage.setItem(SUB_HIDE_KEY, '1'); } catch (err) { }
+      });
+      get('backTop').addEventListener('click', function () {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+      window.addEventListener('scroll', function () {
+        get('backTop').classList.toggle('is-visible', window.scrollY > 600);
+        updateMonthHighlight();
+      }, { passive: true });
 
       get('lightboxClose').innerHTML = iconSvg('x');
       get('lightboxClose').addEventListener('click', closeLightbox);
@@ -914,8 +1631,25 @@
       get('lightbox').addEventListener('wheel', function (e) { e.preventDefault(); }, { passive: false });
       get('lightbox').addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });
       document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'Escape') {
+          closeLightbox();
+          var input = get('search-input');
+          if (document.activeElement === input) input.blur();
+          return;
+        }
+        var target = e.target || {};
+        var typing = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+        if (typing) return;
+        var key = String(e.key || '').toLowerCase();
+        if (e.key === '/' || ((e.metaKey || e.ctrlKey) && key === 'k')) {
+          e.preventDefault();
+          var si = get('search-input');
+          si.focus();
+          si.select();
+        }
       });
+
+      initSentinelObserver();
 
       // 相对路径：项目仓库 Pages 挂在 /<repo>/ 下也能正常加载
       loadJson('./i18n.json', '__ARCHIVE_I18N__')
