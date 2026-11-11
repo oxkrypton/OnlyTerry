@@ -911,5 +911,19 @@
     "reply_to_msg_id": 153932,
     "reply_quote": null,
     "deleted": false
+  },
+  {
+    "id": 154073,
+    "date": "2026-11-11T05:57:20+00:00",
+    "date_local": "2026-11-11T13:57:20+08:00",
+    "month": "2026-11",
+    "sender_id": 1801190829,
+    "text": "Anthropic IPO 公開輪認購現已開放！認購時間：11/10 - 11/17，每位用戶最高可投入 25,000 美元\n\n連結：https://www.bitget.com/spotlight/ipo-prime?clacCode=jt4e",
+    "media": "data/session2/media/154073.jpg",
+    "media_type": "photo",
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
   }
 ]
