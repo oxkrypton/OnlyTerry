@@ -437,7 +437,7 @@ body { padding-bottom: 6rem; }  /* 给固定栏留位，最后一条消息不被
   function intlFmt(d, lang, wallClock) {
     var locale = (state.cfg && state.cfg.intl && state.cfg.intl[lang]) || lang;
     var opts = { dateStyle: 'medium', timeStyle: 'short', hour12: false };
-    if (wallClock) opts.timeZone = 'UTC';
+    opts.timeZone = wallClock ? 'UTC' : 'Asia/Shanghai';  // 更新时刻固定按 UTC+8 展示
     try { return new Intl.DateTimeFormat(locale, opts).format(d); }
     catch (e) { return d.toISOString().slice(0, 16).replace('T', ' '); }
   }
