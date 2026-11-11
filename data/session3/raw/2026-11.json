@@ -18443,5 +18443,61 @@
     "reply_to_msg_id": null,
     "reply_quote": null,
     "deleted": false
+  },
+  {
+    "id": 154092,
+    "date": "2026-11-11T07:35:07+00:00",
+    "date_local": "2026-11-11T15:35:07+08:00",
+    "month": "2026-11",
+    "sender_id": 6837675784,
+    "text": "快来抄我的底吧，crwv还是浮亏的。",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 154093,
+    "date": "2026-11-11T07:37:03+00:00",
+    "date_local": "2026-11-11T15:37:03+08:00",
+    "month": "2026-11",
+    "sender_id": 6837675784,
+    "text": "买了一丢丢，也没啥仓位了",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": 154074,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 154094,
+    "date": "2026-11-11T07:44:31+00:00",
+    "date_local": "2026-11-11T15:44:31+08:00",
+    "month": "2026-11",
+    "sender_id": 7402466091,
+    "text": "會不會跟space x 當初一樣，雷聲大雨點小，結果還常常跌破發行價… 需要專家解析",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 154095,
+    "date": "2026-11-11T07:46:46+00:00",
+    "date_local": "2026-11-11T15:46:46+08:00",
+    "month": "2026-11",
+    "sender_id": 6837675784,
+    "text": "已经压的很低了，不会和spacex一样，那时候正是情绪高涨的时候",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
   }
 ]
