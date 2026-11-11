@@ -939,5 +939,33 @@
     "reply_to_msg_id": null,
     "reply_quote": null,
     "deleted": false
+  },
+  {
+    "id": 154122,
+    "date": "2026-11-11T09:11:45+00:00",
+    "date_local": "2026-11-11T17:11:45+08:00",
+    "month": "2026-11",
+    "sender_id": 8500566474,
+    "text": "🔴 11/11 加密貨幣每日摘要\n\n今天大幣多數下跌，AVAX卻靠股票代幣化題材逆勢收紅。市場還在縮風險，資金挑故事的速度，比全面回流快。\n\n行情截至11月11日09:00 UTC，以下為即時價與24小時漲跌；ETF數據另列交易日期。\n\n-1.32%｜$BTC 73,637.99美元，24小時少了984.84美元。Farside公布的11月2日至6日數據顯示，美國現貨比特幣ETF合計淨流出約12.82億美元；這是上週的撤資紀錄，別誤讀成今天的即時流量。\n\n-2.80%｜$ETH 2,056.45美元，24小時下跌59.33美元，比BTC更弱。11月9日美國現貨以太幣ETF淨流出1.846億美元，幣價與ETF需求都偏冷，現在喊ETH接棒還早。\n\n🏛️ 通膨還沒讓人鬆口氣。美國11月10日公布十月CPI，經季節調整後月增0.4%，核心月增0.3%；整體比九月放慢，但物價仍在上升。我的解讀是，這還不足以讓市場放心押注寬鬆，幣圈想靠降息預期回血，得有更多證據。\n\n數據還有個坑：2025年十月政府停擺影響調查，BLS這次無法公布多項CPI年增率。社群丟出一個年度通膨數字時，記得先看口徑。\n\n🏦 Coinbase的機構託管布局往前一步。公司11月9日宣布，Coinbase National Trust Company取得OCC最終核准，官方紀錄生效日是11月6日。實際意義在於聯邦監管框架下的託管服務，對需要合規對手方的機構有幫助。\n\n🟢 +1.57%｜$AVAX 8.590美元，今天少數有亮點的主要幣種。NYSE與Ava Labs在11月9日公布，其關聯公司籌備中的數位交易平台，將採用Avalanche技術建立代幣化股票清算基礎設施。\n\n這個RWA故事有具體對象，也有清算用途，但平台仍須監管批准。公告沒有量化AVAX需求，技術被採用之後，多少價值能回到代幣，還得繼續看。\n\n👀 下一站是11月13日美東上午8:30的十月PPI，以及後續完整ETF流量。AVAX暫時跑贏大盤可以記一筆，距離整個市場進入alt season，還缺更多板塊一起動。\n\nhttps://www.alphalab.site/2026-11-11-daily-crypto-digest",
+    "media": null,
+    "media_type": "photo",
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 154157,
+    "date": "2026-11-11T11:04:06+00:00",
+    "date_local": "2026-11-11T19:04:06+08:00",
+    "month": "2026-11",
+    "sender_id": 5678341267,
+    "text": "AlphaLab × Pionex 於今天晚上 20:00~21:00 直播活動，主題是：從零開始交易\n\nAlphaLab × Pionex：\nhttps://hackbear.tv/pionex\n\nAlphaLab Pionex LINE ：\nhttps://reurl.cc/5X5Ldq",
+    "media": null,
+    "media_type": "photo",
+    "grouped_id": null,
+    "reply_to_msg_id": 152842,
+    "reply_quote": "AlphaLab × Pionex",
+    "deleted": false
   }
 ]
