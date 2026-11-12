@@ -569,7 +569,9 @@
         renderToolbar();
         renderSubscribe();
         renderAbout();
-        get('contact-label').textContent = t('contactLabel');
+        /* 联系按钮展示邮箱地址本身，三语文案只作无障碍提示 */
+        get('contact-link').setAttribute('aria-label', t('contactLabel'));
+        get('contact-link').setAttribute('title', t('contactLabel'));
         get('join-label').textContent = t('joinLabel');
         updateThemeLabel();
       }
@@ -909,6 +911,20 @@
       get('subscribeClose').innerHTML = iconSvg('x');
       get('aboutClose').innerHTML = iconSvg('x');
       get('backTop').innerHTML = iconSvg('arrowUp');
+
+      /* 联系作者：显示邮箱并点击复制，绕开系统 mailto 处理器 */
+      (function () {
+        var link = get('contact-link');
+        var label = get('contact-label');
+        var email = link.getAttribute('data-email');
+        link.addEventListener('click', function () {
+          copyText(email, function (ok) {
+            label.textContent = ok ? t('copyDone') : t('copyFailed');
+            clearTimeout(link._copyTimer);
+            link._copyTimer = setTimeout(function () { label.textContent = email; }, 1600);
+          });
+        });
+      })();
 
       get('aboutBtn').addEventListener('click', openAbout);
       get('aboutClose').addEventListener('click', closeAbout);
