@@ -32,6 +32,9 @@ SOURCE_FILES = {
     "index.html": "index.html",
     "i18n.json": "i18n.json",
     "avatar.webp": "avatar.webp",
+    "style.css": "style.css",
+    "app.js": "app.js",
+    "glass.js": "glass.js",
 }
 
 

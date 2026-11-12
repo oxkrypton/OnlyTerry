@@ -29,6 +29,9 @@ FRONTEND = Path("frontend")
 HTML_FILE = FRONTEND / "index.html"
 I18N_FILE = FRONTEND / "i18n.json"
 AVATAR_FILE = FRONTEND / "avatar.webp"  # 气泡头像（96x96 WebP）
+# index.html 以相对路径引用这些静态资源；dist/ 不进 git，必须在这里复制，
+# 否则 GitHub Pages 产物会缺 CSS/JS 导致 404。新增前端文件记得加进这里。
+ASSET_FILES = ("style.css", "app.js", "glass.js")
 DIST = Path("dist")
 DIST_DATA = DIST / "data"
 DIST_MEDIA = DIST / "media"
@@ -185,6 +188,8 @@ def main():
     })
     shutil.copy2(I18N_FILE, DIST / "i18n.json")
     shutil.copy2(HTML_FILE, DIST / "index.html")
+    for name in ASSET_FILES:
+        shutil.copy2(FRONTEND / name, DIST / name)
     if AVATAR_FILE.exists():
         shutil.copy2(AVATAR_FILE, DIST / AVATAR_FILE.name)
     quoted = sum(1 for p in posts if p.get("reply_context"))
