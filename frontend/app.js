@@ -3,7 +3,6 @@
       var FALLBACK = 'zh-CN';
       var STORE_KEY = 'tg-archive-lang';
       var THEME_KEY = 'tg-archive-theme';
-      var SUB_KEY = 'tg-archive-subscribed';
       var SUB_HIDE_KEY = 'tg-archive-subscribe-dismissed';
       var PAGE_SIZE = 30;
       var state = {
@@ -54,7 +53,8 @@
         check: '<path d="M20 6 9 17l-5-5"/>',
         x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
         bell: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
-        arrowUp: '<path d="M12 19V5"/><path d="m5 12 7-7 7 7"/>'
+        arrowUp: '<path d="M12 19V5"/><path d="m5 12 7-7 7 7"/>',
+        info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>'
       };
       function iconSvg(name) {
         return '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
@@ -269,6 +269,7 @@
       }
       function renderMonthNav() {
         var box = get('month-nav');
+        var keepTop = box.scrollTop;   // 重建后恢复，切语言不会把月份目录滚回顶部
         box.textContent = '';
         get('timeline-title').textContent = t('timelineTitle');
         renderTimelineMode();
@@ -288,6 +289,7 @@
           b.addEventListener('click', function () { jumpToMonth(m); });
           box.appendChild(b);
         });
+        box.scrollTop = keepTop;
       }
       function highlightMonth(m) {
         Array.prototype.forEach.call(document.querySelectorAll('#month-nav .tg-month-btn'), function (b) {
@@ -480,21 +482,56 @@
       function renderSubscribe() {
         get('subscribe-title').textContent = t('subscribeTitle');
         get('subscribe-desc').textContent = t('subscribeDesc');
+        get('subscribe-desc2').textContent = t('subscribeDesc2');
         get('subscribe-email').placeholder = t('subscribePlaceholder');
         get('subscribe-email').setAttribute('aria-label', t('subscribePlaceholder'));
         get('subscribe-btn').textContent = t('subscribeBtn');
         get('subscribeClose').setAttribute('aria-label', t('subscribeClose'));
         get('subscribeBell').setAttribute('aria-label', t('subscribeBell'));
         get('backTop').setAttribute('aria-label', t('backTop'));
-        var done = false, dismissed = false;
+        var dismissed = false;
         try {
-          done = localStorage.getItem(SUB_KEY) === '1';
           dismissed = localStorage.getItem(SUB_HIDE_KEY) === '1';
         } catch (e) { }
         get('subscribe-card').classList.toggle('tg-dismissed', dismissed);
-        get('subscribe-form').classList.toggle('tg-is-hidden', done);
-        get('subscribe-feedback').classList.toggle('tg-is-hidden', !done);
-        if (done) get('subscribe-feedback').textContent = t('subscribeDone');
+        /* 提示已弹出时，切换语言要同步换成当前语言的「暂未开放」 */
+        var fb = get('subscribe-feedback');
+        if (!fb.classList.contains('tg-is-hidden')) fb.textContent = t('subscribeSoon');
+      }
+
+      /* ---------- 关于本站弹窗：文案全走 i18n，切换语言时随 renderChrome 一起刷新 ---------- */
+      var ABOUT_TEXT = [
+        ['about-title', 'aboutTitle'],
+        ['about-lead', 'aboutLead'],
+        ['about-data-title', 'aboutDataTitle'],
+        ['about-data-body', 'aboutDataBody'],
+        ['about-build-title', 'aboutBuildTitle'],
+        ['about-build-body', 'aboutBuildBody'],
+        ['about-front-title', 'aboutFrontTitle'],
+        ['about-front-body', 'aboutFrontBody'],
+        ['about-i18n-title', 'aboutI18nTitle'],
+        ['about-i18n-body', 'aboutI18nBody'],
+        ['about-next-title', 'aboutNextTitle'],
+        ['about-next-body', 'aboutNextBody']
+      ];
+      function renderAbout() {
+        ABOUT_TEXT.forEach(function (pair) { get(pair[0]).textContent = t(pair[1]); });
+        get('aboutBtn').setAttribute('aria-label', t('aboutBtn'));
+        get('aboutClose').setAttribute('aria-label', t('aboutClose'));
+        get('aboutModal').setAttribute('aria-label', t('aboutTitle'));
+      }
+      function openAbout() {
+        var m = get('aboutModal');
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+        m.focus({ preventScroll: true });
+      }
+      function closeAbout() {
+        var m = get('aboutModal');
+        if (m.classList.contains('hidden')) return;
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+        if (m.contains(document.activeElement)) get('aboutBtn').focus({ preventScroll: true });
       }
 
       function setStatus(text) {
@@ -527,10 +564,12 @@
         get('header-avatar').alt = t('avatarAlt');
         updateLangButtons();
         renderStats();
+        /* 月份目录统一由 renderList() 重建，避免一次切换重建两遍、滚动位置被重置 */
         renderSessionTabs();
-        renderMonthNav();
         renderToolbar();
         renderSubscribe();
+        renderAbout();
+        get('contact-label').textContent = t('contactLabel');
         updateThemeLabel();
       }
 
@@ -838,9 +877,13 @@
       function setLang(code) {
         state.lang = pick(code, state.cfg);
         save(state.lang);
-        state.limit = PAGE_SIZE;
+        /* 列表会整表重建：先停掉跳转残留的锚点滚动，并保住滚动位置与已渲染条数。
+           若把 limit 砍回一页，文档高度骤降会让浏览器钳制 scrollY，出现闪动。 */
+        stopAnchorScroll();
+        var y = window.scrollY;
         renderChrome();
         renderList();
+        window.scrollTo(0, y);
       }
 
       function check(r) {
@@ -861,8 +904,20 @@
       });
 
       get('subscribeBell').innerHTML = iconSvg('bell');
+      get('aboutBtn').innerHTML = iconSvg('info');
       get('subscribeClose').innerHTML = iconSvg('x');
+      get('aboutClose').innerHTML = iconSvg('x');
       get('backTop').innerHTML = iconSvg('arrowUp');
+
+      get('aboutBtn').addEventListener('click', openAbout);
+      get('aboutClose').addEventListener('click', closeAbout);
+      get('aboutModal').addEventListener('click', function (e) {
+        if (e.target === get('aboutModal')) closeAbout();
+      });
+      /* 面板内照常滚动；落在遮罩上的滚轮不带动背景页面 */
+      get('aboutModal').addEventListener('wheel', function (e) {
+        if (!get('aboutPanel').contains(e.target)) e.preventDefault();
+      }, { passive: false });
 
       get('tl-mode-month').addEventListener('click', function () { setTimelineMode('month'); });
       get('tl-mode-day').addEventListener('click', function () { setTimelineMode('day'); });
@@ -898,31 +953,31 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
 
-      // 纯前端订阅：只记本地状态与内联提示，不请求任何服务
-      get('subscribe-form').addEventListener('submit', function (e) {
-        e.preventDefault();
-        var input = get('subscribe-email');
-        if (!input.checkValidity()) { input.reportValidity(); return; }
-        try { localStorage.setItem(SUB_KEY, '1'); } catch (err) { }
-        get('subscribe-form').classList.add('tg-is-hidden');
-        var fb = get('subscribe-feedback');
-        fb.textContent = t('subscribeDone');
-        fb.classList.remove('tg-is-hidden');
-      });
-      get('subscribeBell').addEventListener('click', function () {
+      /* 订阅功能未开放：铃铛 / 卡片 / 表单任一入口都只提示，不记邮箱、不请求服务 */
+      function showSubscribeSoon() {
         var card = get('subscribe-card');
         card.classList.remove('tg-dismissed');
         card.classList.add('is-open');
+        var fb = get('subscribe-feedback');
+        fb.textContent = t('subscribeSoon');
+        fb.classList.remove('tg-is-hidden');
+      }
+      get('subscribe-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        showSubscribeSoon();
+      });
+      get('subscribe-card').addEventListener('click', function (e) {
+        if (e.target.closest && e.target.closest('#subscribeClose')) return;
+        showSubscribeSoon();
+      });
+      get('subscribeBell').addEventListener('click', function () {
+        showSubscribeSoon();
         try { localStorage.removeItem(SUB_HIDE_KEY); } catch (err) { }
+        var card = get('subscribe-card');
         stopAnchorScroll();
         card.scrollIntoView({ behavior: 'smooth', block: 'center' });
         card.classList.add('is-flash');
         setTimeout(function () { card.classList.remove('is-flash'); }, 1600);
-        setTimeout(function () {
-          if (!get('subscribe-form').classList.contains('tg-is-hidden')) {
-            get('subscribe-email').focus({ preventScroll: true });
-          }
-        }, 350);
       });
       get('subscribeClose').addEventListener('click', function () {
         var card = get('subscribe-card');
@@ -954,6 +1009,7 @@
       document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') {
           closeLightbox();
+          closeAbout();
           var input = get('search-input');
           if (document.activeElement === input) input.blur();
           return;
