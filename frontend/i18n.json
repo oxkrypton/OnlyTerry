@@ -25,7 +25,6 @@
   "strings": {
     "zh-CN": {
       "title": "发言归档",
-      "author": "博主",
       "langLabel": "语言",
       "loading": "加载中…",
       "empty": "暂无数据",
@@ -33,9 +32,7 @@
       "metaCount": "{count} 条",
       "metaSep": " · ",
       "metaUpdated": "更新于 {date}（UTC+8）",
-      "replyLabel": "回复 · {sender}",
       "anonSender": "群友",
-      "userSender": "用户 {id}",
       "quoteAria": "引用 {sender} 的消息",
       "quoteMissing": "原消息未收录",
       "quoteExpand": "展开全文",
@@ -81,11 +78,18 @@
       "subscribeDone": "已记录，感谢订阅。",
       "subscribeBell": "订阅更新通知",
       "subscribeClose": "关闭订阅卡片",
-      "backTop": "回到顶部"
+      "backTop": "回到顶部",
+      "timelineModeLabel": "时间轴视图",
+      "timelineModeMonthAria": "按月跳转",
+      "timelineModeDayAria": "按天跳转",
+      "calPrev": "上一个月",
+      "calNext": "下一个月",
+      "calWeekdays": "日,一,二,三,四,五,六",
+      "calDayLabel": "{date} · {count} 条",
+      "calEmpty": "暂无日期"
     },
     "zh-TW": {
       "title": "發言歸檔",
-      "author": "博主",
       "langLabel": "語言",
       "loading": "載入中…",
       "empty": "暫無資料",
@@ -93,9 +97,7 @@
       "metaCount": "{count} 則",
       "metaSep": " · ",
       "metaUpdated": "更新於 {date}（UTC+8）",
-      "replyLabel": "回覆 · {sender}",
       "anonSender": "群友",
-      "userSender": "使用者 {id}",
       "quoteAria": "引用 {sender} 的訊息",
       "quoteMissing": "原始訊息未收錄",
       "quoteExpand": "展開全文",
@@ -141,11 +143,18 @@
       "subscribeDone": "已記錄，感謝訂閱。",
       "subscribeBell": "訂閱更新通知",
       "subscribeClose": "關閉訂閱卡片",
-      "backTop": "回到頂部"
+      "backTop": "回到頂部",
+      "timelineModeLabel": "時間軸檢視",
+      "timelineModeMonthAria": "按月跳轉",
+      "timelineModeDayAria": "按天跳轉",
+      "calPrev": "上一個月",
+      "calNext": "下一個月",
+      "calWeekdays": "日,一,二,三,四,五,六",
+      "calDayLabel": "{date} · {count} 則",
+      "calEmpty": "暫無日期"
     },
     "en": {
       "title": "Message Archive",
-      "author": "Author",
       "langLabel": "Language",
       "loading": "Loading…",
       "empty": "No posts yet",
@@ -153,9 +162,7 @@
       "metaCount": "{count} posts",
       "metaSep": " · ",
       "metaUpdated": "Updated {date} (UTC+8)",
-      "replyLabel": "Reply to {sender}",
       "anonSender": "Group member",
-      "userSender": "User {id}",
       "quoteAria": "Quoted message from {sender}",
       "quoteMissing": "Original message unavailable",
       "quoteExpand": "Show more",
@@ -201,7 +208,15 @@
       "subscribeDone": "Saved. Thanks for subscribing.",
       "subscribeBell": "Email updates",
       "subscribeClose": "Dismiss subscription card",
-      "backTop": "Back to top"
+      "backTop": "Back to top",
+      "timelineModeLabel": "Timeline view",
+      "timelineModeMonthAria": "Jump by month",
+      "timelineModeDayAria": "Jump by day",
+      "calPrev": "Previous month",
+      "calNext": "Next month",
+      "calWeekdays": "Su,Mo,Tu,We,Th,Fr,Sa",
+      "calDayLabel": "{date} · {count} posts",
+      "calEmpty": "No dates yet"
     }
   }
 }

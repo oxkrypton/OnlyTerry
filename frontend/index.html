@@ -18,6 +18,59 @@
       scrollbar-gutter: stable;
     }
 
+    /* 侧栏整体隐藏滚动条；月份目录单独保留常驻可见滚动条，提示还有更多月份 */
+    aside {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    aside::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+      display: none;
+    }
+
+    /* 月份目录：固定可视高度 + 常驻滚动条，内容溢出时一眼可见 */
+    #month-nav {
+      --mn-thumb: #94a3b8;
+      --mn-track: #f1f5f9;
+      max-height: min(46vh, 17rem);
+      padding-right: .375rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--mn-thumb) var(--mn-track);
+    }
+
+    #month-nav::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    #month-nav::-webkit-scrollbar-track {
+      background: var(--mn-track);
+      border-radius: 999px;
+    }
+
+    #month-nav::-webkit-scrollbar-thumb {
+      background: var(--mn-thumb);
+      border: 2px solid transparent;
+      background-clip: padding-box;
+      border-radius: 999px;
+    }
+
+    #month-nav::-webkit-scrollbar-thumb:hover {
+      background: #64748b;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+
+    .dark #month-nav {
+      --mn-thumb: #64748b;
+      --mn-track: #1e293b;
+    }
+
+    .dark #month-nav::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
     /* 图片预览禁止选中/拖拽/点击高亮，避免出现整张蓝色 ::selection 蒙层 */
     #list img,
     #lightbox,
@@ -319,7 +372,7 @@
       background: #fff;
       border: 1px solid rgb(226 232 240 / 90%);
       border-radius: .75rem;
-      padding: 1rem;
+      padding: .875rem;
       box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
     }
 
@@ -336,7 +389,7 @@
       font-size: .8125rem;
       font-weight: 600;
       color: #0f172a;
-      margin: 0 0 .625rem;
+      margin: 0 0 .5rem;
     }
 
     .dark .tg-panel-title {
@@ -351,7 +404,7 @@
     .tg-stat {
       background: #f1f5f9;
       border-radius: .5rem;
-      padding: .5rem .625rem;
+      padding: .375rem .625rem;
     }
 
     .dark .tg-stat {
@@ -387,7 +440,7 @@
       justify-content: space-between;
       width: 100%;
       gap: .5rem;
-      padding: .5rem .625rem;
+      padding: .375rem .625rem;
       border: 0;
       border-radius: .5rem;
       background: transparent;
@@ -450,7 +503,7 @@
       border-radius: 2px;
       background: #e2e8f0;
       overflow: hidden;
-      margin-top: .625rem;
+      margin-top: .5rem;
     }
 
     .dark .tg-bar {
@@ -472,7 +525,7 @@
       justify-content: space-between;
       width: 100%;
       gap: .5rem;
-      padding: .375rem .625rem;
+      padding: .25rem .625rem;
       border: 0;
       border-radius: .5rem;
       background: transparent;
@@ -713,6 +766,230 @@
         transition: none;
       }
     }
+    /* ---------- 时间轴目录：月 / 日视图切换 + 日历 ---------- */
+    .tg-tl-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .5rem;
+      margin-bottom: .5rem;
+    }
+
+    .tg-tl-head .tg-panel-title {
+      margin-bottom: 0;
+    }
+
+    .tg-tl-switch {
+      display: flex;
+      gap: .25rem;
+      flex-shrink: 0;
+    }
+
+    .tg-tl-mode {
+      width: 1.75rem;
+      height: 1.75rem;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #e2e8f0;
+      border-radius: .5rem;
+      background: #fff;
+      color: #64748b;
+      cursor: pointer;
+    }
+
+    .tg-tl-mode svg {
+      width: 14px;
+      height: 14px;
+      display: block;
+    }
+
+    .tg-tl-mode:hover {
+      background: #f1f5f9;
+    }
+
+    .tg-tl-mode.is-active {
+      background: #e6f1fb;
+      border-color: #bfdbfe;
+      color: #0c447c;
+    }
+
+    .dark .tg-tl-mode {
+      background: #0f172a;
+      border-color: #334155;
+      color: #cbd5e1;
+    }
+
+    .dark .tg-tl-mode.is-active {
+      background: #1e3a5f;
+      border-color: #3b82f6;
+      color: #bfdbfe;
+    }
+
+    .dark .tg-tl-mode:hover:not(.is-active) {
+      background: #1e293b;
+    }
+
+    .tg-tl-mode:focus-visible,
+    .tg-cal-arrow:focus-visible,
+    .tg-cal-cell:focus-visible {
+      outline: 2px solid #3b82f6;
+      outline-offset: 2px;
+    }
+
+    /* 整块日历限宽居中：格子不再随侧栏宽度被拉大 */
+    #day-nav {
+      max-width: 18rem;
+      margin-inline: auto;
+    }
+
+    .tg-cal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .5rem;
+      margin-bottom: .25rem;
+    }
+
+    /* 标题占满中间，月份文字变长也不会挤动两侧箭头 */
+    .tg-cal-title {
+      flex: 1;
+      text-align: center;
+      font-size: .75rem;
+      font-weight: 600;
+      color: #0f172a;
+      white-space: nowrap;
+    }
+
+    .dark .tg-cal-title {
+      color: #e2e8f0;
+    }
+
+    .tg-cal-arrow {
+      flex: none;
+      width: 1.5rem;
+      height: 1.5rem;
+      border: 0;
+      border-radius: .375rem;
+      background: transparent;
+      color: #64748b;
+      font-size: 1rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .tg-cal-arrow:hover:not(:disabled) {
+      background: #f1f5f9;
+    }
+
+    .tg-cal-arrow:disabled {
+      opacity: .3;
+      cursor: default;
+    }
+
+    .dark .tg-cal-arrow {
+      color: #cbd5e1;
+    }
+
+    .dark .tg-cal-arrow:hover:not(:disabled) {
+      background: #0f172a;
+    }
+
+    .tg-cal-week,
+    .tg-cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 2px;
+    }
+
+    .tg-cal-week {
+      margin-bottom: 2px;
+    }
+
+    .tg-cal-weekday {
+      padding: .125rem 0;
+      text-align: center;
+      font-size: .625rem;
+      color: #94a3b8;
+    }
+
+    /* 固定格高（不再 aspect-ratio:1），配合固定 6 行，切月时高度恒定 */
+    .tg-cal-cell {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 1.625rem;
+      min-height: 0;
+      border: 0;
+      border-radius: .375rem;
+      background: transparent;
+      color: #334155;
+      font-size: .6875rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .tg-cal-cell.is-outside,
+    .tg-cal-cell.is-disabled {
+      color: #cbd5e1;
+      cursor: default;
+    }
+
+    .dark .tg-cal-cell {
+      color: #cbd5e1;
+    }
+
+    .dark .tg-cal-cell.is-outside,
+    .dark .tg-cal-cell.is-disabled {
+      color: #475569;
+    }
+
+    button.tg-cal-cell {
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button.tg-cal-cell:hover {
+      background: #f1f5f9;
+    }
+
+    .dark button.tg-cal-cell:hover {
+      background: #1e293b;
+    }
+
+    .tg-cal-cell.has-post::after {
+      content: '';
+      position: absolute;
+      bottom: 3px;
+      left: 50%;
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: #3b82f6;
+      transform: translateX(-50%);
+    }
+
+    .tg-cal-cell.is-active {
+      background: #e6f1fb;
+      color: #0c447c;
+    }
+
+    .dark .tg-cal-cell.is-active {
+      background: #1e3a5f;
+      color: #bfdbfe;
+    }
+
+    .tg-cal-hint {
+      margin: .5rem 0 0;
+      font-size: .6875rem;
+      color: #94a3b8;
+      line-height: 1.4;
+    }
+
+    .tg-cal-hint:empty {
+      display: none;
+    }
   </style>
   <script>
     /* 首次绘制前定好主题，避免深色模式闪白；data-theme 保留给原有逻辑 */
@@ -728,26 +1005,30 @@
 </head>
 
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans antialiased">
-  <div class="max-w-5xl mx-auto px-4 py-6 lg:py-8">
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start">
+  <div class="max-w-6xl mx-auto px-3 sm:px-4 py-4 lg:py-6">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-start">
 
-      <!-- 左栏：资料 / 统计 / 分组 / 订阅 / 月份目录；大屏 sticky，小屏自动回单列 -->
-      <aside class="lg:col-span-4 lg:sticky lg:top-6 space-y-3 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto lg:pr-1">
+      <!-- 侧栏：桌面端排在右侧并 sticky；移动端保持最上方单列、不 sticky -->
+      <aside class="lg:col-span-4 lg:order-2 lg:sticky lg:top-6 space-y-2.5 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto">
 
         <header class="tg-panel">
           <div class="flex items-center gap-3 min-w-0">
+            <div class="min-w-0 flex-1">
+              <h1 id="title" class="text-base font-bold text-slate-900 dark:text-slate-100 truncate">Terry · Message Archive</h1>
+              <!-- 条数与「更新于…（UTC+8）」各自 nowrap：窄屏最多折成两行，不会把时间与时区拆开 -->
+              <div id="meta" class="mt-0.5 flex flex-wrap items-baseline text-[11px] leading-4 text-slate-500 dark:text-slate-400">
+                <span id="meta-count" class="whitespace-nowrap"></span>
+                <span id="meta-updated" class="whitespace-nowrap"></span>
+              </div>
+            </div>
             <div class="avatar shrink-0">
               <div class="w-12 h-12 rounded-full ring-1 ring-slate-200 dark:ring-slate-700">
                 <img id="header-avatar" src="./avatar.webp" alt="Terry 的头像" class="w-12 h-12 rounded-full object-cover">
               </div>
             </div>
-            <div class="min-w-0">
-              <h1 id="title" class="text-base font-bold text-slate-900 dark:text-slate-100 truncate">Terry · Message Archive</h1>
-              <span id="meta" class="block min-h-4 text-xs text-slate-500 dark:text-slate-400"></span>
-            </div>
           </div>
 
-          <div class="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
+          <div class="flex items-center justify-between gap-2 mt-2.5 pt-2.5 border-t border-slate-100 dark:border-slate-700">
             <div id="lang" class="inline-flex gap-1" role="group" aria-label="语言"></div>
             <div class="flex items-center gap-1">
               <button id="subscribeBell" type="button" class="tg-bell" aria-label="订阅更新通知"></button>
@@ -756,7 +1037,7 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-2 mt-3">
+          <div class="grid grid-cols-2 gap-1.5 mt-2.5">
             <div class="tg-stat">
               <p class="tg-stat-label" id="stat-posts-label">消息总数</p>
               <p class="tg-stat-num" id="stat-posts">—</p>
@@ -787,7 +1068,7 @@
             <h2 id="subscribe-title" class="tg-panel-title" style="margin-bottom:.25rem">订阅更新通知</h2>
             <button id="subscribeClose" type="button" class="tg-sub-close" aria-label="关闭订阅卡片"></button>
           </div>
-          <p id="subscribe-desc" class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-3">归档有重要观点汇总时，第一时间邮件提醒。</p>
+          <p id="subscribe-desc" class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-2.5">归档有重要观点汇总时，第一时间邮件提醒。</p>
           <form id="subscribe-form" class="flex items-center gap-2">
             <input id="subscribe-email" type="email" required class="tg-sub-input" placeholder="输入你的邮箱…" aria-label="邮箱地址">
             <button id="subscribe-btn" type="submit" class="tg-sub-btn">订阅</button>
@@ -796,13 +1077,43 @@
         </section>
 
         <section class="tg-panel tg-desktop-only" aria-labelledby="timeline-title">
-          <h2 id="timeline-title" class="tg-panel-title">时间轴目录</h2>
-          <div id="month-nav" class="space-y-0.5 max-h-64 overflow-y-auto"></div>
+          <div class="tg-tl-head">
+            <h2 id="timeline-title" class="tg-panel-title">时间轴目录</h2>
+            <div id="timeline-mode" class="tg-tl-switch" role="group" aria-label="时间轴视图">
+              <button id="tl-mode-month" class="tg-tl-mode is-active" type="button" aria-pressed="true" aria-label="按月跳转" title="按月跳转">
+                <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+                  <rect x="2" y="2.75" width="2.5" height="2.5" rx=".6" fill="currentColor" stroke="none" />
+                  <rect x="2" y="6.75" width="2.5" height="2.5" rx=".6" fill="currentColor" stroke="none" />
+                  <rect x="2" y="10.75" width="2.5" height="2.5" rx=".6" fill="currentColor" stroke="none" />
+                  <path d="M6.5 4h7M6.5 8h7M6.5 12h7" />
+                </svg>
+              </button>
+              <button id="tl-mode-day" class="tg-tl-mode" type="button" aria-pressed="false" aria-label="按天跳转" title="按天跳转">
+                <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false" fill="currentColor">
+                  <rect x="2" y="2" width="5" height="5" rx="1" />
+                  <rect x="9" y="2" width="5" height="5" rx="1" />
+                  <rect x="2" y="9" width="5" height="5" rx="1" />
+                  <rect x="9" y="9" width="5" height="5" rx="1" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div id="month-nav" class="space-y-0.5 overflow-y-auto"></div>
+          <div id="day-nav" class="tg-is-hidden">
+            <div class="tg-cal-head">
+              <button id="cal-prev" class="tg-cal-arrow" type="button">&lsaquo;</button>
+              <span id="cal-title" class="tg-cal-title"></span>
+              <button id="cal-next" class="tg-cal-arrow" type="button">&rsaquo;</button>
+            </div>
+            <div id="cal-week" class="tg-cal-week"></div>
+            <div id="cal-grid" class="tg-cal-grid"></div>
+            <p id="cal-hint" class="tg-cal-hint"></p>
+          </div>
         </section>
       </aside>
 
-      <!-- 右栏：工具条 + 消息流；消息卡片本体保持原样 -->
-      <main class="lg:col-span-8 min-w-0">
+      <!-- 主栏：桌面端排在左侧；消息卡片本体保持原样 -->
+      <main class="lg:col-span-8 lg:order-1 min-w-0">
         <div class="tg-panel tg-toolbar flex flex-wrap items-center justify-between gap-2 mb-3">
           <div class="flex items-baseline gap-2 min-w-0">
             <span id="toolbar-title" class="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">美股</span>
@@ -872,7 +1183,8 @@
       var PAGE_SIZE = 30;
       var state = {
         cfg: null, data: null, lang: FALLBACK, failed: null,
-        session: 'session3', query: '', limit: PAGE_SIZE, sort: 'desc'
+        session: 'session3', query: '', limit: PAGE_SIZE, sort: 'desc',
+        tlMode: 'month', calMonth: '', calSelected: ''
       };
       var view = { posts: [], rendered: 0, lastMonth: '' };
       var themeReady = false;
@@ -1088,7 +1400,7 @@
       }
       function fmtNum(n) { return Number(n || 0).toLocaleString('en-US'); }
 
-      /* ---------- 左栏：统计 / 分组 / 月份目录 / 订阅 ---------- */
+      /* ---------- 侧栏：统计 / 分组 / 月份目录 / 订阅 ---------- */
       function renderStats() {
         var labels = { posts: 'statPosts', sessions: 'statSessions', months: 'statMonths', media: 'statMedia' };
         Object.keys(labels).forEach(function (k) {
@@ -1134,10 +1446,9 @@
         var box = get('month-nav');
         box.textContent = '';
         get('timeline-title').textContent = t('timelineTitle');
+        renderTimelineMode();
         var counts = {};
-        var ps = view.posts.length ? view.posts : allPosts().filter(function (p) {
-          return (p.session || 'session3') === state.session;
-        });
+        var ps = navPosts();
         ps.forEach(function (p) {
           var m = monthOf(p); if (m) counts[m] = (counts[m] || 0) + 1;
         });
@@ -1158,26 +1469,174 @@
           b.classList.toggle('is-active', b.getAttribute('data-month') === m);
         });
       }
-      function jumpToMonth(m) {
-        var idx = -1;
-        for (var i = 0; i < view.posts.length; i++) {
-          if (monthOf(view.posts[i]) === m) { idx = i; break; }
+      /* ---------- 时间轴跳转：只认「实时视口位置」，不认文档坐标 ----------
+         旧实现用 offsetTop 累加出的文档坐标或一次性坐标快照，两个前提在这里都不成立：
+           1) 月份标题是 position:sticky，滚过后 offsetTop / getBoundingClientRect 会随滚动漂移，
+              往上跳时算出的目标≈当前位置，于是「点了没反应」；
+           2) 列表分批渲染 + 图片懒加载会持续撑高文档，滚动途中算好的坐标立刻过期，
+              往下跳时落到上一个月。
+         重构：改用「非 sticky 的消息卡片」作锚点，每帧读取它与视口顶部的实时差值并按比例
+         收敛；方向由差值正负自然决定，布局中途怎么变都能自动补偿，上下跳转同一套逻辑。 */
+      var anchorRAF = 0, anchorDeadline = 0, anchorNode = null;
+      function stopAnchorScroll() {
+        if (anchorRAF) { cancelAnimationFrame(anchorRAF); anchorRAF = 0; }
+        anchorNode = null;
+      }
+      function scrollToPost(node) {
+        stopAnchorScroll();
+        if (!node) return;
+        anchorNode = node;
+        anchorDeadline = performance.now() + 2600;
+        var OFFSET = 48;   // 避让常驻顶部的 sticky 月份标题（top 8px，高约 28px）
+        function step() {
+          anchorRAF = 0;
+          if (!anchorNode || !anchorNode.isConnected) return;
+          var delta = anchorNode.getBoundingClientRect().top - OFFSET;
+          if (Math.abs(delta) > 1) window.scrollBy(0, delta * 0.24);
+          // 收敛后仍继续观察一段时间：懒加载图片撑高布局时立即补回来
+          if (performance.now() < anchorDeadline) anchorRAF = requestAnimationFrame(step);
         }
-        if (idx < 0) return;
+        anchorRAF = requestAnimationFrame(step);
+      }
+      function firstPostIndex(match) {
+        for (var i = 0; i < view.posts.length; i++) if (match(view.posts[i])) return i;
+        return -1;
+      }
+      function ensurePostRendered(idx) {
         state.limit = Math.max(state.limit, idx + PAGE_SIZE);
         if (idx >= view.rendered) appendUntil(state.limit);
-        var head = get('month-' + m);
-        if (head) {
-          head.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          highlightMonth(m);
+        return get('post-' + idx);
+      }
+      function jumpToMonth(m) {
+        var idx = firstPostIndex(function (p) { return monthOf(p) === m; });
+        if (idx < 0) return;
+        var card = ensurePostRendered(idx);
+        if (!card) return;
+        highlightMonth(m);
+        scrollToPost(card);
+      }
+      /* ---------- 时间轴目录：按天跳转（日历视图） ----------
+         列表按月分批渲染，卡片带 post-<索引> id；日历只统计当前筛选结果的日期，
+         点某天直接滚到该天第一条消息，不新增列表里的日期锚点，避免改动消息流布局。 */
+      function dayOf(p) {
+        var s = String(p.date_local || p.date || '');
+        return /^\d{4}-\d{2}-\d{2}/.test(s) ? s.slice(0, 10) : '';
+      }
+      function pad2(n) { return (n < 10 ? '0' : '') + n; }
+      function navPosts() {
+        return state.data ? view.posts : allPosts().filter(function (p) {
+          return (p.session || 'session3') === state.session;
+        });
+      }
+      function calMonths() {
+        var seen = {};
+        navPosts().forEach(function (p) { var m = monthOf(p); if (m) seen[m] = 1; });
+        return Object.keys(seen).sort().reverse();   // 最新在前
+      }
+      function setTimelineMode(mode) {
+        state.tlMode = mode;
+        renderTimelineMode();
+        if (mode === 'month') updateMonthHighlight();
+      }
+      function renderTimelineMode() {
+        var day = state.tlMode === 'day';
+        get('month-nav').classList.toggle('tg-is-hidden', day);
+        get('day-nav').classList.toggle('tg-is-hidden', !day);
+        get('timeline-mode').setAttribute('aria-label', t('timelineModeLabel'));
+        [['tl-mode-month', !day, 'timelineModeMonthAria'],
+         ['tl-mode-day', day, 'timelineModeDayAria']].forEach(function (x) {
+          var b = get(x[0]);
+          b.classList.toggle('is-active', x[1]);
+          b.setAttribute('aria-pressed', x[1] ? 'true' : 'false');
+          b.setAttribute('aria-label', t(x[2]));
+          b.setAttribute('title', t(x[2]));
+        });
+        if (day) renderDayNav();
+      }
+      function renderDayNav() {
+        var counts = {};
+        navPosts().forEach(function (p) {
+          var d = dayOf(p); if (d) counts[d] = (counts[d] || 0) + 1;
+        });
+        var ms = calMonths();
+        var week = get('cal-week'), grid = get('cal-grid');
+        var title = get('cal-title'), hint = get('cal-hint');
+        var prev = get('cal-prev'), next = get('cal-next');
+        prev.setAttribute('aria-label', t('calPrev'));
+        next.setAttribute('aria-label', t('calNext'));
+        if (!ms.length) {
+          title.textContent = ''; week.textContent = ''; grid.textContent = '';
+          hint.textContent = t('calEmpty');
+          prev.disabled = true; next.disabled = true;
+          return;
         }
+        if (ms.indexOf(state.calMonth) < 0) state.calMonth = ms[0];
+        var m = state.calMonth, y = +m.slice(0, 4), mo = +m.slice(5, 7);
+        title.textContent = monthLabel(m);
+        var at = ms.indexOf(m);
+        prev.disabled = at >= ms.length - 1;   // ‹ 更旧的月份
+        next.disabled = at <= 0;               // › 更新的月份
+
+        week.textContent = '';
+        t('calWeekdays').split(',').forEach(function (w) {
+          week.appendChild(el('span', 'tg-cal-weekday', w));
+        });
+
+        var first = new Date(y, mo - 1, 1).getDay();       // 0 = 周日
+        var days = new Date(y, mo, 0).getDate();
+        var prevDays = new Date(y, mo - 1, 0).getDate();
+        // 固定 6 周：各月首日 / 天数不同，5 行与 6 行来回切会让面板高度抖
+        var cells = 42;
+        grid.textContent = '';
+        for (var c = 0; c < cells; c++) {
+          var num, inMonth;
+          if (c < first) { num = prevDays - first + 1 + c; inMonth = false; }
+          else if (c < first + days) { num = c - first + 1; inMonth = true; }
+          else { num = c - first - days + 1; inMonth = false; }
+          var d = inMonth ? m + '-' + pad2(num) : '';
+          var n = d ? (counts[d] || 0) : 0;
+          var node;
+          if (n) {
+            node = el('button', 'tg-cal-cell has-post' + (d === state.calSelected ? ' is-active' : ''), num);
+            node.type = 'button';
+            node.setAttribute('data-day', d);
+            node.setAttribute('aria-label', t('calDayLabel', { date: d, count: n }));
+            node.setAttribute('title', t('calDayLabel', { date: d, count: n }));
+            node.addEventListener('click', function () {
+              jumpToDay(this.getAttribute('data-day'));
+            });
+          } else {
+            node = el('span', 'tg-cal-cell ' + (inMonth ? 'is-disabled' : 'is-outside'), num);
+          }
+          grid.appendChild(node);
+        }
+        hint.textContent = '';
+      }
+      function shiftCalMonth(step) {
+        var ms = calMonths(), at = ms.indexOf(state.calMonth);
+        if (at < 0 || !ms[at + step]) return;
+        state.calMonth = ms[at + step];
+        state.calSelected = '';
+        renderDayNav();
+      }
+      function jumpToDay(d) {
+        var idx = firstPostIndex(function (p) { return dayOf(p) === d; });
+        if (idx < 0) return;
+        var card = ensurePostRendered(idx);
+        if (!card) return;
+        state.calSelected = d;
+        renderDayNav();
+        highlightMonth(d.slice(0, 7));
+        scrollToPost(card);
       }
       function updateMonthHighlight() {
         var heads = document.querySelectorAll('#list .tg-month-head[data-month]');
         if (!heads.length) return;
         var active = heads[0].getAttribute('data-month');
         for (var i = 0; i < heads.length; i++) {
-          if (heads[i].getBoundingClientRect().top <= 140) active = heads[i].getAttribute('data-month');
+          // head 本身 sticky，rect.top 恒为 8px 不可用；改用其后的第一张消息卡片（非 sticky）
+          var first = heads[i].nextElementSibling;
+          if (first && first.getBoundingClientRect().top <= 140) active = heads[i].getAttribute('data-month');
           else break;
         }
         highlightMonth(active);
@@ -1229,11 +1688,14 @@
            改动它会让系统按 lang 重选 CJK 回退字体，正文「跟着变字体」 */
         document.title = 'Terry · Message Archive';
         if (state.data) {
-          get('meta').textContent =
-            t('metaCount', { count: state.data.count || 0 }) + t('metaSep') +
+          /* 两段各自 nowrap：更新日期 + 时间 + 时区始终同一层，不会被折到下一行 */
+          get('meta-count').textContent =
+            t('metaCount', { count: state.data.count || 0 }) + t('metaSep');
+          get('meta-updated').textContent =
             t('metaUpdated', { date: fmtUpdated(state.data.updated_at, state.lang) });
         } else {
-          get('meta').textContent = '';
+          get('meta-count').textContent = '';
+          get('meta-updated').textContent = '';
         }
         get('search-input').placeholder = t('searchPlaceholder');
         get('search-input').setAttribute('aria-label', t('searchPlaceholder'));
@@ -1468,6 +1930,7 @@
             view.lastMonth = m;
           }
           var card = renderPost(p);
+          card.id = 'post-' + view.rendered;   // 按天跳转的定位锚点
           frag.appendChild(card);
           cards.push(card);
           view.rendered++;
@@ -1576,10 +2039,37 @@
       get('subscribeClose').innerHTML = iconSvg('x');
       get('backTop').innerHTML = iconSvg('arrowUp');
 
+      get('tl-mode-month').addEventListener('click', function () { setTimelineMode('month'); });
+      get('tl-mode-day').addEventListener('click', function () { setTimelineMode('day'); });
+      get('cal-prev').addEventListener('click', function () { shiftCalMonth(1); });
+      get('cal-next').addEventListener('click', function () { shiftCalMonth(-1); });
+
+      /* 月份目录滚轮优先：整块面板都算命中区；容器还能滚时独占滚轮，
+         到顶 / 到底后不再拦截，继续滑动自然交回页面 */
+      (function () {
+        var panel = get('timeline-title').closest('section');
+        var box = get('month-nav');
+        panel.addEventListener('wheel', function (e) {
+          if (e.ctrlKey || state.tlMode !== 'month') return;
+          var max = box.scrollHeight - box.clientHeight;
+          if (max <= 1) return;
+          var dy = e.deltaY;
+          if (e.deltaMode === 1) dy *= 16;                     // 行模式
+          else if (e.deltaMode === 2) dy *= box.clientHeight;  // 页模式
+          dy *= 1.4;                                           // 触控板小位移也明显响应
+          if (!dy) return;
+          var at = box.scrollTop;
+          if ((dy > 0 && at >= max - 1) || (dy < 0 && at <= 1)) return;
+          box.scrollTop = Math.max(0, Math.min(max, at + dy));
+          e.preventDefault();
+        }, { passive: false });
+      })();
+
       get('sortBtn').addEventListener('click', function () {
         state.sort = state.sort === 'desc' ? 'asc' : 'desc';
         state.limit = PAGE_SIZE;
         renderList();
+        stopAnchorScroll();
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
 
@@ -1599,6 +2089,7 @@
         card.classList.remove('tg-dismissed');
         card.classList.add('is-open');
         try { localStorage.removeItem(SUB_HIDE_KEY); } catch (err) { }
+        stopAnchorScroll();
         card.scrollIntoView({ behavior: 'smooth', block: 'center' });
         card.classList.add('is-flash');
         setTimeout(function () { card.classList.remove('is-flash'); }, 1600);
@@ -1615,12 +2106,17 @@
         try { localStorage.setItem(SUB_HIDE_KEY, '1'); } catch (err) { }
       });
       get('backTop').addEventListener('click', function () {
+        stopAnchorScroll();
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
       window.addEventListener('scroll', function () {
         get('backTop').classList.toggle('is-visible', window.scrollY > 600);
         updateMonthHighlight();
       }, { passive: true });
+      // 用户主动滚动时立刻让出控制权，避免校正循环跟手势抢滚动
+      ['wheel', 'touchstart', 'keydown'].forEach(function (type) {
+        window.addEventListener(type, stopAnchorScroll, { passive: true });
+      });
 
       get('lightboxClose').innerHTML = iconSvg('x');
       get('lightboxClose').addEventListener('click', closeLightbox);
