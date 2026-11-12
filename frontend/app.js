@@ -505,12 +505,10 @@
         ['about-lead', 'aboutLead'],
         ['about-data-title', 'aboutDataTitle'],
         ['about-data-body', 'aboutDataBody'],
-        ['about-build-title', 'aboutBuildTitle'],
-        ['about-build-body', 'aboutBuildBody'],
-        ['about-front-title', 'aboutFrontTitle'],
-        ['about-front-body', 'aboutFrontBody'],
-        ['about-i18n-title', 'aboutI18nTitle'],
-        ['about-i18n-body', 'aboutI18nBody'],
+        ['about-purpose-title', 'aboutPurposeTitle'],
+        ['about-purpose-body', 'aboutPurposeBody'],
+        ['about-author-title', 'aboutAuthorTitle'],
+        ['about-author-body', 'aboutAuthorBody'],
         ['about-next-title', 'aboutNextTitle'],
         ['about-next-body', 'aboutNextBody']
       ];

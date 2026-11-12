@@ -227,28 +227,22 @@
           class="shrink-0 -mt-1 -mr-1 p-1.5 rounded-md text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:hover:text-slate-100 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"></button>
       </div>
       <p id="about-lead" class="text-xs leading-relaxed text-slate-500 dark:text-slate-400 mt-2">Terry
-        频道发言的静态归档站：把消息整理成可检索的时间轴，原文完全保留。</p>
+        频道发言的静态归档站：把消息整理成可检索的时间轴。</p>
       <div class="mt-4 space-y-3">
         <section>
           <h3 id="about-data-title" class="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">数据来源</h3>
-          <p id="about-data-body" class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">频道消息由
-            scripts/fetch_tg.py 抓取，原始事实存于 data/session*/raw/；按 Crypto / 美股两个频道分组，配图另存于 media/。</p>
+          <p id="about-data-body" class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">脚本定期抓取目标群聊的历史消息，过滤出
+            Terry 大的发言进行展示。频道是公开的，TG 也提供了数据抓取的 API。</p>
         </section>
         <section>
-          <h3 id="about-build-title" class="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">构建与发布</h3>
-          <p id="about-build-body" class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-            scripts/build_view.py 从原始数据派生 dist/：生成消息 JSON、扁平拷贝配图，并把 frontend/ 下的静态文件复制进发布目录。dist/
-            是纯静态产物，无服务端、无数据库，可直接托管在任意静态站点。</p>
+          <h3 id="about-purpose-title" class="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">建站目的</h3>
+          <p id="about-purpose-body" class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">注意到群友有订阅
+            Terry 在群内发言的需求，帮助大家解决问题的同时，也想在工作之余创造一些有价值的东西。</p>
         </section>
         <section>
-          <h3 id="about-front-title" class="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">前端实现</h3>
-          <p id="about-front-body" class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">原生 HTML / CSS /
-            JavaScript，零框架、零打包；Tailwind Play CDN 与 daisyUI 负责基础视觉。频道分组、时间轴与日历跳转、全文搜索、图片放大、深浅主题、回到顶部，全部在浏览器本地完成。</p>
-        </section>
-        <section>
-          <h3 id="about-i18n-title" class="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">多语言</h3>
-          <p id="about-i18n-body" class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">界面文案集中在
-            i18n.json，提供简体中文 / 繁體中文 / English 三语；构建期会校验三语文案键完全一致。消息正文与引用原文保持频道原样，不翻译。</p>
+          <h3 id="about-author-title" class="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">关于作者</h3>
+          <p id="about-author-body" class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">一名还未毕业的学生，喜欢加密和美股投资，希望在工作之外能有更多的收入途径。网站后续会添加广告，大家不要觉得烦
+            :)</p>
         </section>
         <section>
           <h3 id="about-next-title" class="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">订阅更新（规划中）</h3>
