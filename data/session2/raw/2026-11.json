@@ -981,5 +981,33 @@
     "reply_to_msg_id": null,
     "reply_quote": null,
     "deleted": false
+  },
+  {
+    "id": 154555,
+    "date": "2026-11-12T03:45:26+00:00",
+    "date_local": "2026-11-12T11:45:26+08:00",
+    "month": "2026-11",
+    "sender_id": 5678341267,
+    "text": "Bybit WSOT 2026，不交易也能參加抽獎！\n\n完成指定任務，例如與 Bybit AI 聊天，就能取得抽獎機會。\n歡迎大家一起參與，也可以加入我們的戰隊「Terry Chen 泰瑞」！\n\n活動與戰隊連結：https://reurl.cc/LeyLE4\n\n可參與任務及獎勵條件，以個人活動頁顯示為準。",
+    "media": null,
+    "media_type": "photo",
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 154562,
+    "date": "2026-11-12T03:53:22+00:00",
+    "date_local": "2026-11-12T11:53:22+08:00",
+    "month": "2026-11",
+    "sender_id": 5678341267,
+    "text": "如果你/妳有在使用 Bybit，千萬不要錯過活動喔～",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": 154555,
+    "reply_quote": null,
+    "deleted": false
   }
 ]
