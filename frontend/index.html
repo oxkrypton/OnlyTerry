@@ -31,15 +31,18 @@
   <div class="max-w-6xl mx-auto px-3 sm:px-4 py-4 lg:py-6">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-start">
 
-      <!-- 侧栏：桌面端排在右侧并 sticky；移动端保持最上方单列、不 sticky -->
-      <aside class="lg:col-span-4 lg:order-2 lg:sticky lg:top-6 space-y-2.5 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto">
+      <!-- 侧栏：桌面端排在右侧并 sticky，固定占满视口高度、整体不滚动；移动端保持最上方单列、不 sticky -->
+      <aside
+        class="lg:col-span-4 lg:order-2 lg:sticky lg:top-6 space-y-2.5 lg:h-[calc(100vh-3rem)] lg:flex lg:flex-col lg:overflow-hidden">
 
-        <header class="tg-panel">
+        <header class="tg-panel lg:shrink-0">
           <div class="flex items-center gap-3 min-w-0">
             <div class="min-w-0 flex-1">
-              <h1 id="title" class="text-base font-bold text-slate-900 dark:text-slate-100 truncate">Terry · Message Archive</h1>
+              <h1 id="title" class="text-base font-bold text-slate-900 dark:text-slate-100 truncate">Terry · Message
+                Archive</h1>
               <!-- 条数与「更新于…（UTC+8）」各自 nowrap：窄屏最多折成两行，不会把时间与时区拆开 -->
-              <div id="meta" class="mt-0.5 flex flex-wrap items-baseline text-[11px] leading-4 text-slate-500 dark:text-slate-400">
+              <div id="meta"
+                class="mt-0.5 flex flex-wrap items-baseline text-[11px] leading-4 text-slate-500 dark:text-slate-400">
                 <span id="meta-count" class="whitespace-nowrap"></span>
                 <span id="meta-updated" class="whitespace-nowrap"></span>
               </div>
@@ -51,7 +54,8 @@
             </div>
           </div>
 
-          <div class="flex items-center justify-between gap-2 mt-2.5 pt-2.5 border-t border-slate-100 dark:border-slate-700">
+          <div
+            class="flex items-center justify-between gap-2 mt-2.5 pt-2.5 border-t border-slate-100 dark:border-slate-700">
             <div id="lang" class="inline-flex gap-1" role="group" aria-label="语言"></div>
             <div class="flex items-center gap-1">
               <button id="subscribeBell" type="button" class="tg-bell" aria-label="订阅更新"></button>
@@ -81,40 +85,48 @@
           </div>
         </header>
 
-        <section class="tg-panel" aria-labelledby="sessions-title">
+        <section class="tg-panel lg:shrink-0" aria-labelledby="sessions-title">
           <h2 id="sessions-title" class="tg-panel-title">频道分组</h2>
           <div id="sessions" class="space-y-1" role="group" aria-label="分组"></div>
           <div class="tg-bar"><span id="session-bar"></span></div>
         </section>
 
-        <section id="subscribe-card" class="tg-panel" aria-labelledby="subscribe-title">
+        <section id="subscribe-card" class="tg-panel lg:shrink-0" aria-labelledby="subscribe-title">
           <div class="flex items-start justify-between gap-2">
             <h2 id="subscribe-title" class="tg-panel-title" style="margin-bottom:.25rem">订阅更新</h2>
             <button id="subscribeClose" type="button" class="tg-sub-close" aria-label="关闭订阅卡片"></button>
           </div>
-          <p id="subscribe-desc" class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-1">当 Terry 在频道内发送包含交易内容的消息时，第一时间邮件提醒。</p>
-          <p id="subscribe-desc2" class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-2.5">使用 WebSocket 监控频道，通过 JEV 决策，分钟级时效性。</p>
+          <p id="subscribe-desc" class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-1">当 Terry
+            在频道内发送包含交易内容的消息时，第一时间邮件提醒。</p>
+          <p id="subscribe-desc2" class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-2.5">使用 WebSocket
+            监控频道，通过 JEV 决策，分钟级时效性。</p>
           <form id="subscribe-form" class="flex items-center gap-2">
-            <input id="subscribe-email" type="email" required class="tg-sub-input" placeholder="输入你的邮箱…" aria-label="邮箱地址">
+            <input id="subscribe-email" type="email" required class="tg-sub-input" placeholder="输入你的邮箱…"
+              aria-label="邮箱地址">
             <button id="subscribe-btn" type="submit" class="tg-sub-btn">订阅</button>
           </form>
-          <p id="subscribe-feedback" class="tg-is-hidden text-xs mt-2 text-blue-600 dark:text-blue-400" role="status" aria-live="polite"></p>
+          <p id="subscribe-feedback" class="tg-is-hidden text-xs mt-2 text-blue-600 dark:text-blue-400" role="status"
+            aria-live="polite"></p>
         </section>
 
-        <section class="tg-panel tg-desktop-only" aria-labelledby="timeline-title">
+        <section id="timeline-panel" class="tg-panel tg-desktop-only" aria-labelledby="timeline-title">
           <div class="tg-tl-head">
             <h2 id="timeline-title" class="tg-panel-title">时间轴目录</h2>
             <div id="timeline-mode" class="tg-tl-switch" role="group" aria-label="时间轴视图">
-              <button id="tl-mode-month" class="tg-tl-mode is-active" type="button" aria-pressed="true" aria-label="按月跳转" title="按月跳转">
-                <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+              <button id="tl-mode-month" class="tg-tl-mode is-active" type="button" aria-pressed="true"
+                aria-label="按月跳转" title="按月跳转">
+                <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false" fill="none"
+                  stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
                   <rect x="2" y="2.75" width="2.5" height="2.5" rx=".6" fill="currentColor" stroke="none" />
                   <rect x="2" y="6.75" width="2.5" height="2.5" rx=".6" fill="currentColor" stroke="none" />
                   <rect x="2" y="10.75" width="2.5" height="2.5" rx=".6" fill="currentColor" stroke="none" />
                   <path d="M6.5 4h7M6.5 8h7M6.5 12h7" />
                 </svg>
               </button>
-              <button id="tl-mode-day" class="tg-tl-mode" type="button" aria-pressed="false" aria-label="按天跳转" title="按天跳转">
-                <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false" fill="currentColor">
+              <button id="tl-mode-day" class="tg-tl-mode" type="button" aria-pressed="false" aria-label="按天跳转"
+                title="按天跳转">
+                <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"
+                  fill="currentColor">
                   <rect x="2" y="2" width="5" height="5" rx="1" />
                   <rect x="9" y="2" width="5" height="5" rx="1" />
                   <rect x="2" y="9" width="5" height="5" rx="1" />
@@ -134,7 +146,10 @@
             <div id="cal-grid" class="tg-cal-grid"></div>
             <p id="cal-hint" class="tg-cal-hint"></p>
           </div>
-          <p class="mt-3 text-center text-[11px] leading-4">
+          <p class="mt-3 flex items-center justify-center gap-2.5 text-[11px] leading-4">
+            <a id="join-link" href="https://t.me/+yK3JEfTzIjVlMjY9" target="_blank" rel="noopener noreferrer"
+              class="rounded-sm text-slate-400 dark:text-slate-500 transition-colors duration-150 underline-offset-2 hover:text-blue-600 hover:underline dark:hover:text-blue-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500"><span id="join-label">加入反馈</span></a>
+            <span class="text-slate-300 dark:text-slate-600" aria-hidden="true">·</span>
             <a id="contact-link" href="mailto:code@ronyu.me"
               class="rounded-sm text-slate-400 dark:text-slate-500 transition-colors duration-150 underline-offset-2 hover:text-blue-600 hover:underline dark:hover:text-blue-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500"><span id="contact-label">联系作者</span></a>
           </p>
@@ -202,9 +217,8 @@
   </div>
 
   <!-- 关于本站：纯静态说明弹窗，文案全部走 i18n；点背景、关闭按钮或 Esc 均可关闭 -->
-  <div id="aboutModal"
-    class="hidden fixed inset-0 z-[60] items-center justify-center p-4 bg-black/60"
-    role="dialog" aria-modal="true" aria-labelledby="about-title" tabindex="-1">
+  <div id="aboutModal" class="hidden fixed inset-0 z-[60] items-center justify-center p-4 bg-black/60" role="dialog"
+    aria-modal="true" aria-labelledby="about-title" tabindex="-1">
     <div id="aboutPanel"
       class="w-full max-w-lg max-h-[80vh] overscroll-contain overflow-y-auto rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl p-5">
       <div class="flex items-start justify-between gap-3">
@@ -212,27 +226,34 @@
         <button id="aboutClose" type="button" aria-label="关闭说明弹窗"
           class="shrink-0 -mt-1 -mr-1 p-1.5 rounded-md text-slate-400 hover:text-slate-900 hover:bg-slate-100 dark:hover:text-slate-100 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"></button>
       </div>
-      <p id="about-lead" class="text-xs leading-relaxed text-slate-500 dark:text-slate-400 mt-2">Terry 频道发言的静态归档站：把消息整理成可检索的时间轴，原文完全保留。</p>
+      <p id="about-lead" class="text-xs leading-relaxed text-slate-500 dark:text-slate-400 mt-2">Terry
+        频道发言的静态归档站：把消息整理成可检索的时间轴，原文完全保留。</p>
       <div class="mt-4 space-y-3">
         <section>
           <h3 id="about-data-title" class="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">数据来源</h3>
-          <p id="about-data-body" class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">频道消息由 scripts/fetch_tg.py 抓取，原始事实存于 data/session*/raw/；按 Crypto / 美股两个频道分组，配图另存于 media/。</p>
+          <p id="about-data-body" class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">频道消息由
+            scripts/fetch_tg.py 抓取，原始事实存于 data/session*/raw/；按 Crypto / 美股两个频道分组，配图另存于 media/。</p>
         </section>
         <section>
           <h3 id="about-build-title" class="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">构建与发布</h3>
-          <p id="about-build-body" class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">scripts/build_view.py 从原始数据派生 dist/：生成消息 JSON、扁平拷贝配图，并把 frontend/ 下的静态文件复制进发布目录。dist/ 是纯静态产物，无服务端、无数据库，可直接托管在任意静态站点。</p>
+          <p id="about-build-body" class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+            scripts/build_view.py 从原始数据派生 dist/：生成消息 JSON、扁平拷贝配图，并把 frontend/ 下的静态文件复制进发布目录。dist/
+            是纯静态产物，无服务端、无数据库，可直接托管在任意静态站点。</p>
         </section>
         <section>
           <h3 id="about-front-title" class="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">前端实现</h3>
-          <p id="about-front-body" class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">原生 HTML / CSS / JavaScript，零框架、零打包；Tailwind Play CDN 与 daisyUI 负责基础视觉。频道分组、时间轴与日历跳转、全文搜索、图片放大、深浅主题、回到顶部，全部在浏览器本地完成。</p>
+          <p id="about-front-body" class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">原生 HTML / CSS /
+            JavaScript，零框架、零打包；Tailwind Play CDN 与 daisyUI 负责基础视觉。频道分组、时间轴与日历跳转、全文搜索、图片放大、深浅主题、回到顶部，全部在浏览器本地完成。</p>
         </section>
         <section>
           <h3 id="about-i18n-title" class="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">多语言</h3>
-          <p id="about-i18n-body" class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">界面文案集中在 i18n.json，提供简体中文 / 繁體中文 / English 三语；构建期会校验三语文案键完全一致。消息正文与引用原文保持频道原样，不翻译。</p>
+          <p id="about-i18n-body" class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">界面文案集中在
+            i18n.json，提供简体中文 / 繁體中文 / English 三语；构建期会校验三语文案键完全一致。消息正文与引用原文保持频道原样，不翻译。</p>
         </section>
         <section>
           <h3 id="about-next-title" class="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">订阅更新（规划中）</h3>
-          <p id="about-next-body" class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">计划通过 WebSocket 监控频道，经 JEV 决策后，对包含交易内容的消息做分钟级邮件提醒。当前功能暂未开放，点击铃铛可查看提示。</p>
+          <p id="about-next-body" class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">计划通过 WebSocket
+            监控频道，经 JEV 决策后，对包含交易内容的消息做分钟级邮件提醒。当前功能暂未开放，点击铃铛可查看提示。</p>
         </section>
       </div>
     </div>

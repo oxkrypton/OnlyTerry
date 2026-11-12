@@ -15,7 +15,8 @@
       display: none;
     }
 
-    /* 月份目录：固定可视高度 + 常驻滚动条，内容溢出时一眼可见 */
+    /* 月份目录是整页唯一允许滚动的区域：右栏本身固定不滚（见下方 lg 规则）。
+       保留细滚动条，月份多时一眼可见还能往下翻；contain 避免滚动链带动整页。 */
     #month-nav {
       --mn-thumb: #94a3b8;
       --mn-track: #f1f5f9;
@@ -23,6 +24,7 @@
       padding-right: .375rem;
       scrollbar-width: thin;
       scrollbar-color: var(--mn-thumb) var(--mn-track);
+      overscroll-behavior: contain;
     }
 
     #month-nav::-webkit-scrollbar {
@@ -54,6 +56,47 @@
 
     .dark #month-nav::-webkit-scrollbar-thumb:hover {
       background: #94a3b8;
+    }
+
+    @media (min-width: 1024px) {
+      /* 右栏固定为视口高度：时间轴目录吃掉剩余空间，月份列表 / 日历都撑满整栏 */
+      #timeline-panel {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 0%;
+        min-height: 0;
+      }
+
+      #month-nav,
+      #day-nav {
+        flex: 1 1 0%;
+        min-height: 0;
+      }
+
+      #month-nav {
+        max-height: none;
+      }
+
+      /* 日视图：日历 6 行均分剩余高度，页脚自然贴底，不再留出一大块空白 */
+      #day-nav {
+        display: flex;
+        flex-direction: column;
+      }
+
+      #day-nav .tg-cal-grid {
+        flex: 1 1 0%;
+        grid-template-rows: repeat(6, minmax(0, 1fr));
+      }
+
+      #day-nav .tg-cal-cell {
+        height: auto;
+      }
+
+      /* 有消息的小圆点跟着数字走，格子拉高后不会掉到格子底部 */
+      #day-nav .tg-cal-cell.has-post::after {
+        top: calc(50% + .55rem);
+        bottom: auto;
+      }
     }
 
     /* 图片预览禁止选中/拖拽/点击高亮，避免出现整张蓝色 ::selection 蒙层 */
@@ -823,10 +866,9 @@
       outline-offset: 2px;
     }
 
-    /* 整块日历限宽居中：格子不再随侧栏宽度被拉大 */
+    /* 日历横向铺满卡片，去掉 18rem 限宽造成的左右大留白 */
     #day-nav {
-      max-width: 18rem;
-      margin-inline: auto;
+      width: 100%;
     }
 
     .tg-cal-head {

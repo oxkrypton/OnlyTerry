@@ -570,6 +570,7 @@
         renderSubscribe();
         renderAbout();
         get('contact-label').textContent = t('contactLabel');
+        get('join-label').textContent = t('joinLabel');
         updateThemeLabel();
       }
 
