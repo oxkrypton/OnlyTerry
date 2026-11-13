@@ -1219,5 +1219,19 @@
     "reply_to_msg_id": null,
     "reply_quote": null,
     "deleted": false
+  },
+  {
+    "id": 155957,
+    "date": "2026-11-13T10:47:10+00:00",
+    "date_local": "2026-11-13T18:47:10+08:00",
+    "month": "2026-11",
+    "sender_id": 5678341267,
+    "text": "最近行情的波動很大，如果你不想測過行情，可以參考 AlphaLab 推出的交易策略 🙂\n\nAlphaLab 交易策略\nhttps://www.alphalab.site/category/crypto/trading\n\nTerry × OKX 邀請碼\nhttps://hackbear.tv/okx\n\nAlphaLab × OKX LINE 社群\nhttps://reurl.cc/6X84XZ",
+    "media": null,
+    "media_type": "photo",
+    "grouped_id": null,
+    "reply_to_msg_id": 153934,
+    "reply_quote": null,
+    "deleted": false
   }
 ]
