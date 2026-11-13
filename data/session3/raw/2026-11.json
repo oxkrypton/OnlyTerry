@@ -31197,5 +31197,61 @@
     "reply_to_msg_id": null,
     "reply_quote": null,
     "deleted": false
+  },
+  {
+    "id": 155751,
+    "date": "2026-11-13T02:25:53+00:00",
+    "date_local": "2026-11-13T10:25:53+08:00",
+    "month": "2026-11",
+    "sender_id": 597292366,
+    "text": "那裏找到，難怪臨收市前交易量超大上到400",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": 155717,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 155752,
+    "date": "2026-11-13T02:27:02+00:00",
+    "date_local": "2026-11-13T10:27:02+08:00",
+    "month": "2026-11",
+    "sender_id": 597292366,
+    "text": "老馬會不會帶一下消息搶風頭 讓老黃好過點",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 155753,
+    "date": "2026-11-13T02:39:36+00:00",
+    "date_local": "2026-11-13T10:39:36+08:00",
+    "month": "2026-11",
+    "sender_id": 1189030581,
+    "text": "https://www.facebook.com/share/18mg5ZjsUZ/?mibextid=wwXIfr",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 155754,
+    "date": "2026-11-13T02:39:55+00:00",
+    "date_local": "2026-11-13T10:39:55+08:00",
+    "month": "2026-11",
+    "sender_id": 1189030581,
+    "text": "這個是真的還假的？",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
   }
 ]
