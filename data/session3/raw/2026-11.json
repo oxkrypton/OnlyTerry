@@ -33283,5 +33283,19 @@
     "reply_to_msg_id": null,
     "reply_quote": null,
     "deleted": false
+  },
+  {
+    "id": 156081,
+    "date": "2026-11-14T00:00:06+00:00",
+    "date_local": "2026-11-14T08:00:06+08:00",
+    "month": "2026-11",
+    "sender_id": 8500566474,
+    "text": "⚠️ 例行防詐騙宣導 ⚠️\n🚨 群組嚴禁私訊組員 🚨\n* 所有收到的私訊都是釣魚詐騙。不要理會，馬上截圖回報 「詐騙舉報」 版\n* 假裝閒聊 -> 全都是詐騙，不要當下一個受害者\n* Terry，管理員 -> 絕對不會主動私訊任何人",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
   }
 ]
