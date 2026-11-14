@@ -1261,5 +1261,33 @@
     "reply_to_msg_id": null,
     "reply_quote": null,
     "deleted": false
+  },
+  {
+    "id": 156205,
+    "date": "2026-11-14T14:51:10+00:00",
+    "date_local": "2026-11-14T22:51:10+08:00",
+    "month": "2026-11",
+    "sender_id": 6837675784,
+    "text": "BTC跌这么快的原因，我大概找到了。 都尼玛赎回BTC抄底半导体了，这是我的猜测，但大概率是真的，半导体缓慢筑顶的时候BTC暴涨，半导体回调了，BTC暴跌，这就是大资金的流动取向",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 156206,
+    "date": "2026-11-14T15:34:12+00:00",
+    "date_local": "2026-11-14T23:34:12+08:00",
+    "month": "2026-11",
+    "sender_id": 6002086590,
+    "text": "比特幣 整個跌爛耶 蠻神奇的 之前是一根下來砸盤，現在是一整天慢慢下跌 好像沒有底的fu 有時有點支撐 然後過一兩個小時繼續下探 真是蠻神奇的",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
   }
 ]
