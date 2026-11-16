@@ -1,0 +1,34 @@
+const form = document.querySelector("#subscription-form");
+const button = document.querySelector("#submit");
+const result = document.querySelector("#result");
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  result.className = "result";
+  const channels = [...form.querySelectorAll('input[name="channel"]:checked')].map((input) => input.value);
+  if (channels.length === 0) {
+    result.textContent = "请至少选择一个频道。";
+    result.classList.add("error");
+    return;
+  }
+  button.disabled = true;
+  button.firstElementChild.textContent = "正在发送…";
+  result.textContent = "";
+  try {
+    const response = await fetch("/api/subscriptions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: form.email.value.trim(), channels }),
+    });
+    const data = await response.json();
+    result.textContent = data.message || "请求已完成。";
+    result.classList.add(response.ok ? "success" : "error");
+    if (response.ok) form.email.value = "";
+  } catch {
+    result.textContent = "网络连接失败，请稍后重试。";
+    result.classList.add("error");
+  } finally {
+    button.disabled = false;
+    button.firstElementChild.textContent = "发送确认邮件";
+  }
+});

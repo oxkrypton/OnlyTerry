@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="订阅博主关于美股和加密货币的高价值原始发言。">
+  <title>博主发言邮件订阅</title>
+  <link rel="stylesheet" href="/subscribe.css">
+</head>
+<body>
+  <main class="shell">
+    <section class="intro">
+      <div class="eyebrow"><span></span> ORIGINAL POSTS · EMAIL ALERTS</div>
+      <h1>重要发言，<br><em>原样送达。</em></h1>
+      <p class="lead">订阅美股与加密货币博主的原始群聊发言。决策模型只负责筛选，不改写、不总结，买入截图也会随邮件送达。</p>
+      <ul class="facts">
+        <li><strong>智能筛选</strong><span>JEV 评分超过 80 才发送</span></li>
+        <li><strong>合并提醒</strong><span>连续发言自动合并，减少打扰</span></li>
+        <li><strong>随时退订</strong><span>每封邮件都带有一键退订入口</span></li>
+      </ul>
+    </section>
+
+    <section class="panel" aria-labelledby="form-title">
+      <div class="panel-heading"><span>EMAIL SUBSCRIPTION</span><span class="status-dot">订阅开放</span></div>
+      <h2 id="form-title">选择你关注的频道</h2>
+      <p>可以同时选择两个频道，提交后请到邮箱确认。</p>
+      <form id="subscription-form">
+        <label class="channel">
+          <input type="checkbox" name="channel" value="us_stocks" checked>
+          <span class="check" aria-hidden="true"></span>
+          <span class="channel-copy"><strong>美股频道</strong><small>US STOCKS · 交易、仓位与市场观点</small></span>
+          <span class="ticker">US</span>
+        </label>
+        <label class="channel">
+          <input type="checkbox" name="channel" value="crypto" checked>
+          <span class="check" aria-hidden="true"></span>
+          <span class="channel-copy"><strong>加密货币频道</strong><small>CRYPTO · 链上资产、订单与风险提示</small></span>
+          <span class="ticker">₿</span>
+        </label>
+        <label class="email-label" for="email">接收邮箱</label>
+        <input id="email" name="email" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com" required>
+        <button id="submit" type="submit"><span>发送确认邮件</span><span aria-hidden="true">→</span></button>
+        <p id="result" class="result" role="status" aria-live="polite"></p>
+      </form>
+      <p class="legal">提交即表示你同意接收所选频道的邮件提醒。内容仅为博主原文转发，不构成任何投资建议。</p>
+    </section>
+  </main>
+  <footer>TERRY MESSAGE ALERTS <span>·</span> 原文、原图、无摘要</footer>
+  <script src="/subscribe.js" defer></script>
+</body>
+</html>

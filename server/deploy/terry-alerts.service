@@ -1,0 +1,22 @@
+[Unit]
+Description=Terry blogger email alerts
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=terryalerts
+Group=terryalerts
+WorkingDirectory=/opt/terry-alerts
+EnvironmentFile=/opt/terry-alerts/.env
+ExecStart=/opt/terry-alerts/terry-alerts
+Restart=always
+RestartSec=5s
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/opt/terry-alerts/data
+
+[Install]
+WantedBy=multi-user.target

@@ -9,3 +9,12 @@ __pycache__/
 .venv/
 .DS_Store
 /mock
+node_modules/
+server/bin/
+server/release/
+server/terry-alerts
+server/coverage.out
+data/service/
+*.log
+.agents/
+.claude/

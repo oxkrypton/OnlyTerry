@@ -13,28 +13,18 @@
       var view = { posts: [], rendered: 0, lastMonth: '' };
       var themeReady = false;
 
-      /* Tailwind 类名 + daisyUI 组件类集中管理，避免散落的自定义 CSS */
-      var LANG_BASE = 'btn btn-xs btn-ghost font-medium focus:outline-none focus:ring-2 focus:ring-blue-500';
-      var LANG_ACTIVE = 'btn-active !bg-white !text-blue-600 dark:!bg-slate-700 dark:!text-blue-400';
-      var LANG_IDLE = 'text-slate-600 dark:text-slate-300';
-      var TAB_BASE = 'tab font-medium focus:outline-none focus:ring-2 focus:ring-blue-500';
-      var TAB_ACTIVE = 'tab-active !bg-blue-600 !text-white';
-      var TAB_IDLE = 'text-slate-600 dark:text-slate-300';
-      var CLS_EMPTY = 'alert bg-slate-100 dark:bg-slate-800 text-sm text-slate-500 dark:text-slate-400';
-      /* 引用块的伪元素竖条 / 单行省略号需要自定义 CSS，统一放在 <style> 的 .tg-quote 段落；
-         这里只保留 Tailwind 能表达的卡片 / 正文 / 链接 / 图片类名。 */
-
-      /* Post Card：不使用 daisyUI chat-bubble。气泡左下角的小凸角是 ::before 伪元素，
-         不参与父级 box-shadow，所以那一个角没有阴影；改成四角统一的 rounded-xl + shadow-sm 卡片后消失。 */
-      var CLS_CARD = 'bg-white dark:bg-slate-800 rounded-xl border border-slate-200/80 dark:border-slate-700 p-4 mb-3 shadow-sm hover:border-slate-300 transition-all';
-      var CLS_POST_DATE = 'text-xs font-mono text-slate-400';
-      var CLS_TEXT = 'text-sm text-slate-700 dark:text-slate-200 leading-relaxed mt-1.5 break-words whitespace-pre-wrap';
-      /* 正文 URL 必须是普通 inline + 强制断词：inline-flex 是不可拆分的 inline 盒，
-         长 URL 会整块撑破卡片；附件链接保留 inline-flex，让 mt-3 生效 */
-      var CLS_LINK = 'text-blue-600 hover:underline font-medium';
-      var CLS_LINK_TEXT = CLS_LINK + ' inline break-all';
-      var CLS_IMG = 'mt-3 rounded-lg max-h-60 w-auto object-cover border border-slate-100 cursor-zoom-in max-w-full';
-      var CLS_COPY_BTN = 'shrink-0 -mt-1 -mr-1 p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:text-slate-200 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors';
+      /* 语义化类名：样式统一由 style.css 管理，不依赖运行时 CSS 框架。 */
+      var LANG_BASE = 'lang-btn';
+      var LANG_ACTIVE = 'is-active';
+      var LANG_IDLE = '';
+      var CLS_EMPTY = 'empty-state';
+      var CLS_CARD = 'post-card';
+      var CLS_POST_DATE = 'post-date';
+      var CLS_TEXT = 'post-text';
+      var CLS_LINK = 'text-link';
+      var CLS_LINK_TEXT = CLS_LINK + ' text-link-inline';
+      var CLS_IMG = 'post-image';
+      var CLS_COPY_BTN = 'icon-btn copy-btn';
 
       /* session → 单栏切换标题，文案走 i18n；默认落在美股 session3 */
       var SESSION_ORDER = ['session2', 'session3'];
@@ -57,7 +47,7 @@
         info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>'
       };
       function iconSvg(name) {
-        return '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+        return '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
           'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ' +
           'aria-hidden="true">' + ICONS[name] + '</svg>';
       }
@@ -131,7 +121,7 @@
         btn.setAttribute('data-lucide', name);
         btn.innerHTML = iconSvg(name);
         var mc = document.querySelector('meta[name="theme-color"]');
-        if (mc) mc.setAttribute('content', value === 'dark' ? '#0f172a' : '#f8fafc');
+        if (mc) mc.setAttribute('content', value === 'dark' ? '#171e21' : '#f4f6f6');
         updateThemeLabel();
       }
       function initThemeButton() {
@@ -546,7 +536,9 @@
       function renderChrome() {
         /* 不改 <html lang>：正文是简体原文，整页语言固定 zh-CN；
            改动它会让系统按 lang 重选 CJK 回退字体，正文「跟着变字体」 */
-        document.title = 'Terry · Message Archive';
+        document.title = 'Terry · ' + t('title');
+        get('title').textContent = t('title');
+        get('site-desc').textContent = t('aboutLead');
         if (state.data) {
           /* 两段各自 nowrap：更新日期 + 时间 + 时区始终同一层，不会被折到下一行 */
           get('meta-count').textContent =
@@ -726,9 +718,9 @@
       }
 
       function renderPost(p) {
-        var card = el('div', CLS_CARD);
+        var card = el('article', CLS_CARD);
 
-        var top = el('div', 'flex items-start justify-between gap-2');
+        var top = el('div', 'post-top');
         var time = el('time', CLS_POST_DATE, fmtPostDate(p.date_local || p.date, state.lang));
         time.setAttribute('datetime', p.date_local || p.date || '');
         top.appendChild(time);
@@ -750,7 +742,7 @@
           var name = rel.split('/').pop();
           var url = './media/' + encodeURIComponent(name);
           if (p.media_type === 'photo' && /\.(jpg|jpeg|png|webp|gif)$/i.test(name)) {
-            var box = el('div', 'max-w-full');
+            var box = el('div', 'post-media');
             var img = el('img', CLS_IMG);
             img.src = url; img.loading = 'lazy'; img.alt = t('imageAlt');
             img.draggable = false;
@@ -763,7 +755,7 @@
             box.appendChild(img);
             card.appendChild(box);
           } else {
-            var a = el('a', CLS_LINK + ' inline-flex items-center gap-0.5 mt-3', t('attachment', { name: name }));
+            var a = el('a', CLS_LINK + ' attachment-link', t('attachment', { name: name }));
             a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
             card.appendChild(a);
           }

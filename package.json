@@ -1,0 +1,11 @@
+{
+  "name": "terry-message-archive",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A quiet, readable static archive for Terry's public channel posts.",
+  "scripts": {
+    "dev": "python3 scripts/serve.py --host 127.0.0.1 --port 7100",
+    "build": "python3 scripts/build_view.py",
+    "preview": "python3 scripts/serve.py --dist --host 127.0.0.1 --port 7100"
+  }
+}

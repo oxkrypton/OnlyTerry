@@ -31,7 +31,7 @@ I18N_FILE = FRONTEND / "i18n.json"
 AVATAR_FILE = FRONTEND / "avatar.webp"  # 气泡头像（96x96 WebP）
 # index.html 以相对路径引用这些静态资源；dist/ 不进 git，必须在这里复制，
 # 否则 GitHub Pages 产物会缺 CSS/JS 导致 404。新增前端文件记得加进这里。
-ASSET_FILES = ("style.css", "app.js", "glass.js")
+ASSET_FILES = ("style.css", "app.js")
 DIST = Path("dist")
 DIST_DATA = DIST / "data"
 DIST_MEDIA = DIST / "media"
