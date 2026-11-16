@@ -165,9 +165,9 @@ h1, h2, h3, p, dl, dd { margin: 0; }
 .site-description { max-width: 58ch; color: var(--text-secondary); font-size: 15px; line-height: 1.75; }
 .archive-meta { display: flex; flex-wrap: wrap; margin-top: 8px; color: var(--text-muted); font-size: 12px; line-height: 1.6; }
 .archive-meta span { white-space: nowrap; }
-.archive-stats { display: grid; grid-template-columns: repeat(4, minmax(70px, 1fr)); gap: 28px; }
+.archive-stats { display: grid; grid-template-columns: repeat(4, minmax(70px, 1fr)); gap: 28px; width: 452px; }
 .stat-item dt { color: var(--text-muted); font-size: 11px; line-height: 1.4; white-space: nowrap; }
-.stat-item dd { margin-top: 5px; color: var(--text); font-family: var(--font-display); font-size: 23px; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.stat-item dd { margin-top: 5px; color: var(--text); font-family: var(--font-display); font-size: 23px; font-variant-numeric: tabular-nums; line-height: 1.2; white-space: nowrap; }
 
 /* Primary reading layout */
 .site-layout { display: grid; grid-template-columns: minmax(0, 1fr) 292px; gap: 48px; align-items: start; margin-top: 32px; }
