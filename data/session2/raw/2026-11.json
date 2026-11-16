@@ -1331,5 +1331,61 @@
     "reply_to_msg_id": null,
     "reply_quote": null,
     "deleted": false
+  },
+  {
+    "id": 156520,
+    "date": "2026-11-16T04:00:04+00:00",
+    "date_local": "2026-11-16T12:00:04+08:00",
+    "month": "2026-11",
+    "sender_id": 8500566474,
+    "text": "⚠️ 例行防詐騙宣導 ⚠️\n🚨 群組嚴禁私訊組員 🚨\n* 所有收到的私訊都是釣魚詐騙。不要理會，馬上截圖回報 「詐騙舉報」 版\n* 假裝閒聊 -> 全都是詐騙，不要當下一個受害者\n* Terry，管理員 -> 絕對不會主動私訊任何人",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 156589,
+    "date": "2026-11-16T09:12:08+00:00",
+    "date_local": "2026-11-16T17:12:08+08:00",
+    "month": "2026-11",
+    "sender_id": 8500566474,
+    "text": "🔴 11/16 每日加密摘要｜礦機照跑，收益卻被偷\n\n今天大幣偏弱，資安事件更搶戲。礦機沒有停、電費繼續付，挖礦收益卻流向別人；交易所之間的轉帳，也開始受到監管限制直接影響。\n\n▼ -1.18%｜$BTC 報 64,402.52 美元，24 小時下跌 769.81 美元，走勢仍偏弱。這份行情截至 UTC 09:00，尚未涵蓋週一北美交易時段與當日現貨 ETF 最終淨流量。\n\n▼ -0.31%｜$ETH 報 1,803.97 美元，24 小時下跌 5.67 美元，跌幅小於 BTC。相對抗跌可以記一筆，但光靠一天表現，還不能說資金已輪動進以太坊。\n\n📜 MEXC 限制：法規生效日和平台動作要分開看\n\n美國財政部上週宣布對 MEXC 採取措施，相關命令將於 12 月 10 日生效，限制受規範金融機構處理涉及該平台的特定資金移轉。Binance 已在 11 月 10 日公告，向相關實體轉帳的請求會遭拒，相關來源入金則會暫扣並進行合規審查。跨平台搬資金的路徑，已經受到實際影響。\n\n🚨 Luxor：你付電費，攻擊者收收益\n\nLuxor 的 Commander 礦機管理工具週末遭入侵，客戶算力被改指向 OCEAN 礦池，收益地址也遭替換。公司表示十多個客戶帳戶受影響，發現異常後兩小時內修補工具，隨後開始還原設定，並承諾補償受影響算力。\n\nCEO Nick Hansen 在 X 稱攻擊涉及 AI，但具體方式尚未公開；流傳的礦機台數和算力規模也未獲公司確認。這次最有感的是，設備運作正常，不代表收益還在自己手上。\n\n🔥 Cardano：RWA 提案被社群打槍\n\n▲ +0.72%｜$ADA 報 0.15209 美元。社群否決 Toto Finance 動用 2,200 萬枚 ADA 購買實體銅、再代幣化的提案，反對票權超過贊成的 140 倍；幣價小漲與投票結果之間，沒有足夠證據建立因果。\n\n提案原打算把約三分之二資金投入銅，之後出售、返還金庫。社群這次沒有買單：RWA 想拿公共金庫的錢，費用、退出安排和資金用途，都得先說服持有人。\n\nhttps://www.alphalab.site/2026-11-16-daily-crypto-digest",
+    "media": null,
+    "media_type": "photo",
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 156622,
+    "date": "2026-11-16T10:25:39+00:00",
+    "date_local": "2026-11-16T18:25:39+08:00",
+    "month": "2026-11",
+    "sender_id": 6837675784,
+    "text": "buy the dip bro😂",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 156624,
+    "date": "2026-11-16T11:14:37+00:00",
+    "date_local": "2026-11-16T19:14:37+08:00",
+    "month": "2026-11",
+    "sender_id": 5678341267,
+    "text": "AlphaLab × Pionex 本週課表已發布！\n\n還沒註冊派網的夥伴，可以使用以下連結：\nhttps://hackbear.tv/pionex\n\n有興趣參加的夥伴，可以加入 AlphaLab Pionex LINE 群組，直播連結會在課前公布：\nhttps://reurl.cc/5X5Ldq",
+    "media": null,
+    "media_type": "photo",
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
   }
 ]
