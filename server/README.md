@@ -1,6 +1,6 @@
 # Go 版博主原始发言邮件订阅服务
 
-这是面向 2C2G、低带宽云服务器重写的版本。JEV 只负责决策，邮件固定模板只包含原始文字、时间和原图。订阅页面也嵌入二进制，服务器不需要 Node、npm、Go、Git 或外部静态文件。
+这是面向 2C2G、低带宽云服务器重写的版本。JEV 只负责决策，邮件固定模板只包含原始文字、时间和原图。订阅前端托管在 GitHub Pages（由 `PAGES_URL` 指定，服务端仅对其放行跨域并把根路径重定向过去），服务器只保留 API 与邮件链接落点页，不需要 Node、npm、Go、Git 或外部静态文件。
 
 ## 功能
 
@@ -14,6 +14,8 @@
 - 纯 Go SQLite 驱动，`CGO_ENABLED=0` 可交叉编译成无动态依赖的 Linux 二进制。
 
 ## 本地构建，服务器只接收产物
+
+> 完整的部署、HTTPS、systemd、升级与备份流程见 [DEPLOYMENT.md](DEPLOYMENT.md)。
 
 需要 Go 1.26 或更新版本的只是**构建机器**，不是云服务器。
 
@@ -115,8 +117,8 @@ WebSocket 图片有公开 URL 时，服务器仍会下载并压缩一份供 JEV 
 
 ## HTTP 入口
 
-- `GET /subscribe`：内嵌订阅页面。
-- `POST /api/subscriptions`：`{"email":"...","channels":["us_stocks","crypto"]}`。
+- `GET /`：302 重定向到 `PAGES_URL`（GitHub Pages 订阅前端）；未配置时返回 404。
+- `POST /api/subscriptions`：`{"email":"...","channels":["us_stocks","crypto"]}`；仅对 `PAGES_URL` 来源返回 CORS 头并应答 OPTIONS 预检。
 - `GET /confirm/{token}`：确认最新订阅请求，48 小时有效。
 - `GET /unsubscribe/{token}`：退订确认页。
 - `POST /unsubscribe/{token}`：退订全部频道，支持一键退订。

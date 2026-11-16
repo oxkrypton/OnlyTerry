@@ -1,7 +1,6 @@
 package app
 
 import (
-	"embed"
 	"encoding/json"
 	"fmt"
 	"html"
@@ -13,9 +12,6 @@ import (
 	"sync"
 	"time"
 )
-
-//go:embed public/*
-var publicFiles embed.FS
 
 type rateLimiter struct {
 	mu       sync.Mutex
@@ -41,21 +37,24 @@ func (l *rateLimiter) allow(ip string) bool {
 }
 
 type HTTPHandler struct {
-	config  Config
-	store   *Store
-	tokens  *Tokens
-	mailer  Mailer
-	limiter *rateLimiter
-	mux     *http.ServeMux
+	config      Config
+	store       *Store
+	tokens      *Tokens
+	mailer      Mailer
+	limiter     *rateLimiter
+	mux         *http.ServeMux
+	pagesOrigin string
 }
 
 func NewHTTPHandler(config Config, store *Store, tokens *Tokens, mailer Mailer) *HTTPHandler {
 	h := &HTTPHandler{config: config, store: store, tokens: tokens, mailer: mailer, limiter: &rateLimiter{attempts: map[string][]time.Time{}}, mux: http.NewServeMux()}
+	if config.PagesURL != "" {
+		if u, err := url.Parse(config.PagesURL); err == nil {
+			h.pagesOrigin = u.Scheme + "://" + u.Host
+		}
+	}
 	h.mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) { writeJSON(w, 200, map[string]any{"ok": true}) })
-	h.mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) { http.Redirect(w, r, "/subscribe", http.StatusFound) })
-	h.mux.HandleFunc("GET /subscribe", h.subscribePage)
-	h.mux.HandleFunc("GET /subscribe.css", h.asset("public/subscribe.css", "text/css; charset=utf-8"))
-	h.mux.HandleFunc("GET /subscribe.js", h.asset("public/subscribe.js", "text/javascript; charset=utf-8"))
+	h.mux.HandleFunc("GET /{$}", h.root)
 	h.mux.HandleFunc("POST /api/subscriptions", h.subscribe)
 	h.mux.HandleFunc("GET /confirm/{token}", h.confirm)
 	h.mux.HandleFunc("GET /unsubscribe/{token}", h.unsubscribePage)
@@ -67,6 +66,18 @@ func (h *HTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Referrer-Policy", "no-referrer")
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'")
+	// 仅放行 GitHub Pages 来源的跨域请求；预检在进 mux 前直接应答。
+	if h.pagesOrigin != "" && r.Header.Get("Origin") == h.pagesOrigin {
+		w.Header().Set("Access-Control-Allow-Origin", h.pagesOrigin)
+		w.Header().Set("Vary", "Origin")
+		if r.Method == http.MethodOptions {
+			w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+			w.Header().Set("Access-Control-Max-Age", "86400")
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+	}
 	h.mux.ServeHTTP(w, r)
 }
 func writeJSON(w http.ResponseWriter, status int, value any) {
@@ -74,20 +85,20 @@ func writeJSON(w http.ResponseWriter, status int, value any) {
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(value)
 }
-func (h *HTTPHandler) asset(path, contentType string) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, _ *http.Request) {
-		data, err := publicFiles.ReadFile(path)
-		if err != nil {
-			http.NotFound(w, nil)
-		}
-		w.Header().Set("Content-Type", contentType)
-		_, _ = w.Write(data)
+// root 把访问根路径的用户引导到 GitHub Pages 前端；未配置 PAGES_URL 时返回 404。
+func (h *HTTPHandler) root(w http.ResponseWriter, r *http.Request) {
+	if h.config.PagesURL == "" {
+		writeJSON(w, 404, map[string]string{"message": "订阅入口请访问前端页面"})
+		return
 	}
+	http.Redirect(w, r, h.config.PagesURL, http.StatusFound)
 }
-func (h *HTTPHandler) subscribePage(w http.ResponseWriter, _ *http.Request) {
-	data, _ := publicFiles.ReadFile("public/index.html")
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	_, _ = w.Write(data)
+// pagesLink 在结果页上给出回到前端订阅页的链接；未配置 PAGES_URL 时不输出链接。
+func (h *HTTPHandler) pagesLink(label string) string {
+	if h.config.PagesURL == "" {
+		return ""
+	}
+	return `<a href="` + html.EscapeString(h.config.PagesURL) + `">` + html.EscapeString(label) + `</a>`
 }
 func resultPage(title, body string) string {
 	return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>` + html.EscapeString(title) + `</title><style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f4f4f1;color:#18201b;margin:0;display:grid;place-items:center;min-height:100vh}.card{background:white;max-width:540px;margin:24px;padding:36px;border-radius:16px;box-shadow:0 12px 40px #0001}h1{font-size:26px}p{line-height:1.8;color:#5b625d}a,button{display:inline-block;background:#1e5b3c;color:white;padding:12px 20px;border:0;border-radius:8px;text-decoration:none;font-size:16px;cursor:pointer}</style></head><body><main class="card"><h1>` + html.EscapeString(title) + `</h1>` + body + `</main></body></html>`
@@ -164,10 +175,10 @@ func (h *HTTPHandler) confirm(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if err != nil {
 		w.WriteHeader(400)
-		_, _ = w.Write([]byte(resultPage("无法确认订阅", `<p>`+html.EscapeString(err.Error())+`</p><a href="/subscribe">重新订阅</a>`)))
+		_, _ = w.Write([]byte(resultPage("无法确认订阅", `<p>`+html.EscapeString(err.Error())+`</p>`+h.pagesLink("重新订阅"))))
 		return
 	}
-	_, _ = w.Write([]byte(resultPage("订阅已确认", `<p>你已确认订阅。高分原始发言会发送到你的邮箱，每封邮件都包含退订链接。</p><a href="/subscribe">管理订阅</a>`)))
+	_, _ = w.Write([]byte(resultPage("订阅已确认", `<p>你已确认订阅。高分原始发言会发送到你的邮箱，每封邮件都包含退订链接。</p>`+h.pagesLink("管理订阅"))))
 }
 func (h *HTTPHandler) unsubscribePage(w http.ResponseWriter, r *http.Request) {
 	_, err := h.tokens.Verify(r.PathValue("token"), "unsubscribe")
@@ -191,5 +202,5 @@ func (h *HTTPHandler) unsubscribe(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(resultPage("退订链接无效", `<p>请使用最近一封邮件中的退订链接。</p>`)))
 		return
 	}
-	_, _ = w.Write([]byte(resultPage("已退订", `<p>你的全部频道订阅已取消。你可以随时重新订阅。</p><a href="/subscribe">重新订阅</a>`)))
+	_, _ = w.Write([]byte(resultPage("已退订", `<p>你的全部频道订阅已取消。你可以随时重新订阅。</p>`+h.pagesLink("重新订阅"))))
 }

@@ -1,3 +1,7 @@
+// GitHub Pages 前端：把订阅表单提交到小机器的订阅 API。
+// 部署前把下面的地址改成你的服务公网地址（与服务端 .env 的 PUBLIC_URL 一致，且已配置 PAGES_URL 放行本页面来源）。
+const API_BASE = "https://alerts.example.com";
+
 const form = document.querySelector("#subscription-form");
 const button = document.querySelector("#submit");
 const result = document.querySelector("#result");
@@ -15,7 +19,7 @@ form.addEventListener("submit", async (event) => {
   button.firstElementChild.textContent = "正在发送…";
   result.textContent = "";
   try {
-    const response = await fetch("/api/subscriptions", {
+    const response = await fetch(`${API_BASE}/api/subscriptions`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: form.email.value.trim(), channels }),

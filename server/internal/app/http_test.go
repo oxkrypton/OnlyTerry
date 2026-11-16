@@ -57,10 +57,54 @@ func TestHTTPSubscriptionConfirmationAndOneClickUnsubscribe(t *testing.T) {
 	if len(recipients) != 0 {
 		t.Fatal("退订后仍接收邮件")
 	}
-	page, _ := http.Get(server.URL + "/subscribe")
-	pageData, _ := io.ReadAll(page.Body)
-	page.Body.Close()
-	if !strings.Contains(string(pageData), "重要发言") {
-		t.Fatal("嵌入订阅页面不可用")
+}
+func TestRootRedirectsToPagesAndCORS(t *testing.T) {
+	config := testConfig(t)
+	store, _ := NewStore(config.DatabasePath)
+	defer store.Close()
+	tokens, _ := NewTokens(config.TokenSecret)
+	server := httptest.NewServer(NewHTTPHandler(config, store, tokens, &fakeMailer{}))
+	defer server.Close()
+	noRedirect := &http.Client{CheckRedirect: func(_ *http.Request, _ []*http.Request) error { return http.ErrUseLastResponse }}
+	response, err := noRedirect.Get(server.URL + "/")
+	if err != nil {
+		t.Fatal(err)
+	}
+	response.Body.Close()
+	if response.StatusCode != 302 || response.Header.Get("Location") != "https://pages.example.com" {
+		t.Fatalf("根路径未重定向到前端页：%d %s", response.StatusCode, response.Header.Get("Location"))
+	}
+	preflight, _ := http.NewRequest(http.MethodOptions, server.URL+"/api/subscriptions", nil)
+	preflight.Header.Set("Origin", "https://pages.example.com")
+	preflight.Header.Set("Access-Control-Request-Method", "POST")
+	response, err = http.DefaultClient.Do(preflight)
+	if err != nil {
+		t.Fatal(err)
+	}
+	response.Body.Close()
+	if response.StatusCode != 204 || response.Header.Get("Access-Control-Allow-Origin") != "https://pages.example.com" {
+		t.Fatalf("预检失败：%d", response.StatusCode)
+	}
+	body, _ := json.Marshal(map[string]any{"email": "cors@example.com", "channels": []Channel{ChannelUS}})
+	request, _ := http.NewRequest(http.MethodPost, server.URL+"/api/subscriptions", bytes.NewReader(body))
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Origin", "https://pages.example.com")
+	response, err = http.DefaultClient.Do(request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	response.Body.Close()
+	if response.StatusCode != 202 || response.Header.Get("Access-Control-Allow-Origin") != "https://pages.example.com" {
+		t.Fatalf("跨域订阅请求失败：%d", response.StatusCode)
+	}
+	evil, _ := http.NewRequest(http.MethodOptions, server.URL+"/api/subscriptions", nil)
+	evil.Header.Set("Origin", "https://evil.example.com")
+	response, err = http.DefaultClient.Do(evil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	response.Body.Close()
+	if response.Header.Get("Access-Control-Allow-Origin") != "" {
+		t.Fatal("未授权来源获得了 CORS 放行")
 	}
 }

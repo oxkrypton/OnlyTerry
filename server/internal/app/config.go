@@ -15,6 +15,7 @@ type Config struct {
 	Host                  string
 	Port                  int
 	PublicURL             string
+	PagesURL              string
 	DatabasePath          string
 	ImageDir              string
 	TokenSecret           string
@@ -109,6 +110,7 @@ func LoadConfig() Config {
 	return Config{
 		Host: env("HOST", "0.0.0.0"), Port: envInt("PORT", 3000),
 		PublicURL:    strings.TrimRight(env("PUBLIC_URL", "http://127.0.0.1:3000"), "/"),
+		PagesURL:     strings.TrimRight(env("PAGES_URL", ""), "/"),
 		DatabasePath: env("DATABASE_PATH", "data/service/service.db"), ImageDir: env("IMAGE_DIR", "data/service/images"),
 		TokenSecret: os.Getenv("TOKEN_SECRET"), TypeSafeAPIKey: os.Getenv("TYPESAFE_API_KEY"),
 		TypeSafeBaseURL: env("TYPESAFE_BASE_URL", "https://api.typesafe.ai"), JevModel: env("JEV_MODEL", "jev-latest"),
@@ -144,6 +146,11 @@ func (c Config) Validate() error {
 	}
 	if u, err := url.Parse(c.PublicURL); err != nil || (u.Scheme != "http" && u.Scheme != "https") {
 		return fmt.Errorf("PUBLIC_URL 必须是完整 HTTP(S) URL")
+	}
+	if c.PagesURL != "" {
+		if u, err := url.Parse(c.PagesURL); err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+			return fmt.Errorf("PAGES_URL 必须是完整 HTTP(S) URL")
+		}
 	}
 	if c.Window < time.Second || c.CleanupInterval <= 0 || c.ImageRetention <= 0 || c.DatabaseRetention <= 0 {
 		return fmt.Errorf("窗口和清理周期配置无效")
