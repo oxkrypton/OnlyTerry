@@ -58,7 +58,7 @@ html {
   min-width: 320px;
   min-height: 100dvh;
   scrollbar-gutter: stable;
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   scroll-padding-top: 24px;
 }
 body {
