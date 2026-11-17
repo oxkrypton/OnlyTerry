@@ -1415,5 +1415,47 @@
     "reply_to_msg_id": null,
     "reply_quote": null,
     "deleted": false
+  },
+  {
+    "id": 156859,
+    "date": "2026-11-17T09:11:51+00:00",
+    "date_local": "2026-11-17T17:11:51+08:00",
+    "month": "2026-11",
+    "sender_id": 8500566474,
+    "text": "⚪ 11/17 加密貨幣每日摘要\n\n今天比較像喘口氣：BTC幾乎沒動，ETH、SOL翻綠，但ETF資金還沒全面回頭。進入今日的兩個話題都在公鏈開發端：Solana告別beta，Vitalik則重新看好抗量子技術的一條路線。\n\n🔴 -0.20%｜$BTC 報64,272.82美元。11月16日美國現貨BTC ETF已揭露項目合計淨流出6,860萬美元，但IBIT欄位仍未填入數字，這筆合計還不是完整日結，不能急著拿來判定流出已經放緩。\n\n🟢 +0.76%｜$ETH 報1,818.12美元，表現略強於BTC。同一美國交易日，現貨ETH ETF合計淨流出840萬美元；幣價回升與基金申購需求暫時沒同步，綠字還不足以證明資金轉向。\n\n📜 ETF有規則更新。SEC在11月16日發布Cboe BZX通知，涉及Invesco Galaxy的BTC與ETH ETF轉用通用上市標準。兩檔原本就已上市，重點是既有產品的規則轉軌；後續能否吸引新需求，仍得看申贖數字。\n\n🔥 +2.22%｜$SOL 報72.380美元，在這次主要幣快照裡漲幅領先。Solana基金會宣布Solana 1.0，正式拿掉mainnet beta名稱，並建立Agave、Firedancer等客戶端可共同參照的協議版本。\n\n用戶的SOL、帳戶、應用與交易紀錄照常，不需要遷移。這次變動方便開發者和節點營運者追蹤網路規則，但各項軟體更新、功能啟用仍有自己的時程，別把1.0當成所有升級一次到齊。\n\n🧬 Vitalik的新焦點是leanPCS與抗量子研究。相關EIP-8288希望把多筆簽章與證明聚合，減少大型資料逐筆上鏈的負擔；大家在意的是，未來安全機制變得更複雜，驗證和儲存成本能不能控制住。\n\n提案目前仍是草案，距離主網落地還有工作要做。我會把它當成開發進度追蹤，短線價格變動則沒有足夠證據歸因於這項研究。\n\n🕘 價格統一採11月17日09:00:06 UTC快照，漲跌幅為24小時變動；ETF數據對應11月16日美國交易日，兩者不是同一段統計時間。\n\nhttps://www.alphalab.site/2026-11-17-daily-crypto-digest",
+    "media": null,
+    "media_type": "photo",
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 156875,
+    "date": "2026-11-17T10:19:28+00:00",
+    "date_local": "2026-11-17T18:19:28+08:00",
+    "month": "2026-11",
+    "sender_id": 5678341267,
+    "text": "AlphaLab × Pionex 於今天晚上 20:00~21:00 直播活動，主題如下：\n• 掃盤分析、QA問答\n• 合約網格實戰\n\n\nAlphaLab × Pionex：\nhttps://hackbear.tv/pionex\n\nAlphaLab Pionex LINE ：\nhttps://reurl.cc/5X5Ldq",
+    "media": null,
+    "media_type": "photo",
+    "grouped_id": null,
+    "reply_to_msg_id": 156624,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 156892,
+    "date": "2026-11-17T13:00:39+00:00",
+    "date_local": "2026-11-17T21:00:39+08:00",
+    "month": "2026-11",
+    "sender_id": 5678341267,
+    "text": "同學們，上課囉～～\n\n邀請您參加VooV Meeting\n會議主題：基礎技術分析課程\n會議時間：2026/11/17 21:00-22:00 (GMT+08:00) 中國標準時間 - 台北\n\n點選連結加入會議，或添加至會議列表：\nhttps://voovmeeting.com/dm/bRXxzQd4upiz\n\n#騰訊會議：340-003-904",
+    "media": null,
+    "media_type": "photo",
+    "grouped_id": null,
+    "reply_to_msg_id": 156812,
+    "reply_quote": null,
+    "deleted": false
   }
 ]
