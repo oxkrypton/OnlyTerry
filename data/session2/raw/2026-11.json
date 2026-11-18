@@ -1457,5 +1457,19 @@
     "reply_to_msg_id": 156812,
     "reply_quote": null,
     "deleted": false
+  },
+  {
+    "id": 157252,
+    "date": "2026-11-18T07:09:34+00:00",
+    "date_local": "2026-11-18T15:09:34+08:00",
+    "month": "2026-11",
+    "sender_id": 5678341267,
+    "text": "Claude 的開發公司 Anthropic 即將 IPO，幣安錢包現已開放代幣化股票申購。\n\nBinance x Anthropic IPO xStocks 活動\nhttps://www.binance.com/zh-TC/support/announcement/detail/81e5668f2453429593002ad515a06b4c\n\n申購至今天 22:00，最低 100 USDC，另收 5% 服務費。\n\n幣安註冊：https://hackbear.tv/binance\n\n註冊及出入金教學：https://alphalab.site/binance\n\n申購不保證獲配，代幣化股票不具股東權利，並有地區限制與投資風險。\n需有 Alpha 積分並符合活動資格，實際可否參加以活動頁面為準。",
+    "media": null,
+    "media_type": "photo",
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
   }
 ]
