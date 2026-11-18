@@ -1471,5 +1471,61 @@
     "reply_to_msg_id": null,
     "reply_quote": null,
     "deleted": false
+  },
+  {
+    "id": 157280,
+    "date": "2026-11-18T09:11:43+00:00",
+    "date_local": "2026-11-18T17:11:43+08:00",
+    "month": "2026-11",
+    "sender_id": 8500566474,
+    "text": "🪙 11/18 每日加密摘要｜XRP、SOL 領漲，ETH 還沒跟上\n\n今天比較像各走各的盤。BTC 小漲、ETH 小跌，XRP 與 SOL 則跑在前面。光看這組報價，還不能把「幾個幣走強」直接翻譯成全面 risk-on，更別急著替行情配上一個資金大舉回流的故事。\n\n🟢 +0.53%｜$BTC 報 64,610.79 美元，24 小時增加 341.75 美元。漲幅溫和；ETF 淨流量與交易所資金進出都尚未核實，這一段上漲是不是機構在買，目前沒有足夠資訊下結論。\n\n🔴 -0.46%｜$ETH 報 1,809.95 美元，24 小時減少 8.36 美元。BTC 收紅、ETH 收黑，兩者方向分歧；只憑這張報價表，還看不到 ETH 同步轉強的證據。\n\n🔥 +4.42%｜$XRP 報 0.99870 美元，是這份主要幣種清單中漲幅最大的標的。它的表現值得留意，但目前沒有已核實的當日公告，不能把漲勢直接歸因於監管、ETF 或合作消息。\n\n🔥 +3.23%｜$SOL 報 74.700 美元，漲幅同樣超過 BTC 與 ETH。這支持「SOL 相對強勢」的觀察；要進一步說是 Solana 生態全面活躍，還需要成交量、鏈上使用量與項目消息佐證。\n\n⚖️ 今天的重點是分歧。XRP 與 SOL 走強，不代表整個 alt 市場都在上漲；ETH 偏弱，也不足以證明資金已經持續撤離。價格提供的是結果，背後的買盤來源還需要另外查證。\n\n🕒 時效先講清楚：以上是 2026/11/18 09:00 UTC 的即時快照，換算美東為同日凌晨 04:00，並非北美晚間更新。24 小時漲跌幅是滾動比較，也不是當地交易日的收盤成績。\n\n📡 本次無法使用即時網路搜尋，未能核實當日 X 熱議、ETF 資金流、鯨魚轉帳或監管與突發新聞，因此這版只整理已提供的行情。沒有列出消息，不代表今天沒有消息；北美晚間閱讀時，也需留意這份報價與發稿時點的落差。\n\nhttps://www.alphalab.site/2026-11-18-daily-crypto-digest",
+    "media": null,
+    "media_type": "photo",
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 157289,
+    "date": "2026-11-18T09:54:10+00:00",
+    "date_local": "2026-11-18T17:54:10+08:00",
+    "month": "2026-11",
+    "sender_id": 5678341267,
+    "text": "🔥 平台首創美股質押理財｜NVDA 池年化 25% 起！！！\n\nBitget 美股 PoolX，鎖 rNVDA、rQQQ、rSPY 瓜分 50,000 USDT。\n\n📅 11/17 – 12/1 19:00（UTC+8）\n🎯 NVDA 池限 11/16 後註冊新用戶\n🎯 QQQ、SPY 池 新老用戶皆可參與\nTerry x Bitget：\n👉 https://www.bitget.com/zh-CN/launchhub/poolx?clacCode=jt4e",
+    "media": null,
+    "media_type": "photo",
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 157293,
+    "date": "2026-11-18T10:19:49+00:00",
+    "date_local": "2026-11-18T18:19:49+08:00",
+    "month": "2026-11",
+    "sender_id": 5678341267,
+    "text": "AlphaLab × Pionex 於今天晚上 20:00~21:00 直播活動，主題如下：\n• 諧波基礎教學\n\nAlphaLab × Pionex：\nhttps://hackbear.tv/pionex\n\nAlphaLab Pionex LINE ：\nhttps://reurl.cc/5X5Ldq",
+    "media": null,
+    "media_type": "photo",
+    "grouped_id": null,
+    "reply_to_msg_id": 156624,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 157302,
+    "date": "2026-11-18T12:00:07+00:00",
+    "date_local": "2026-11-18T20:00:07+08:00",
+    "month": "2026-11",
+    "sender_id": 8500566474,
+    "text": "⚠️ 例行防詐騙宣導 ⚠️\n🚨 群組嚴禁私訊組員 🚨\n* 所有收到的私訊都是釣魚詐騙。不要理會，馬上截圖回報 「詐騙舉報」 版\n* 假裝閒聊 -> 全都是詐騙，不要當下一個受害者\n* Terry，管理員 -> 絕對不會主動私訊任何人",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
   }
 ]
