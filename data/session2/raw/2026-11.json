@@ -1597,5 +1597,33 @@
     "reply_to_msg_id": 157569,
     "reply_quote": null,
     "deleted": false
+  },
+  {
+    "id": 157842,
+    "date": "2026-11-19T15:42:57+00:00",
+    "date_local": "2026-11-19T23:42:57+08:00",
+    "month": "2026-11",
+    "sender_id": 1801190829,
+    "text": "ether.fi 黑五活動開跑了 🛍️\n新用戶用我的連結註冊，11/23–11/30 這一週刷卡有 20% 回饋，每人最高拿回 $50（刷到 $250 就拿滿）。這次確定所有新用戶都可以拿滿 $50！黑五本來就要買的東西，用這張卡刷就對了。\n\n\n1️⃣ 用我的連結註冊 etherfi\nhttps://hackbear.tv/etherfi\n⚠️ 用 App 註冊的話，要在註冊頁點「Have a referral code?」手動輸入 terry，沒填就沒有活動資格，事後也不能補。\n\n2️⃣ 完成 KYC、入金開卡\n身分驗證 → 存一點 USDC 進去啟用卡片 → 加進 Apple Pay / Google Pay。\nKYC 有時候要等，建議現在就辦，不要拖到 23 號。\n\n3️⃣ 11/23–11/30 正常刷卡就好\n實體店、網購都算（台灣時間 11/23 早上 8 點 ～ 12/1 早上 8 點）。\n\n\n❌ 不算回饋：ATM 提款、轉帳、禮物卡、之後退款的消費；11/22 以前刷的也不算。\n\n台幣怎麼買 USDC 入金，我整理在這邊：\nhttps://www.alphalab.site/max-to-etherfi",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 157871,
+    "date": "2026-11-19T16:00:01+00:00",
+    "date_local": "2026-11-20T00:00:01+08:00",
+    "month": "2026-11",
+    "sender_id": 8500566474,
+    "text": "⚠️ 例行防詐騙宣導 ⚠️\n🚨 群組嚴禁私訊組員 🚨\n* 所有收到的私訊都是釣魚詐騙。不要理會，馬上截圖回報 「詐騙舉報」 版\n* 假裝閒聊 -> 全都是詐騙，不要當下一個受害者\n* Terry，管理員 -> 絕對不會主動私訊任何人",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
   }
 ]
