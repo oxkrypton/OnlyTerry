@@ -1639,5 +1639,33 @@
     "reply_to_msg_id": null,
     "reply_quote": null,
     "deleted": false
+  },
+  {
+    "id": 158414,
+    "date": "2026-11-20T15:09:14+00:00",
+    "date_local": "2026-11-20T23:09:14+08:00",
+    "month": "2026-11",
+    "sender_id": 1801190829,
+    "text": "Etherfi 黑五送 $50u 大家不要錯過了！\n註冊連結：\nhttps://hackbear.tv/etherfi",
+    "media": "data/session2/media/158414.jpg",
+    "media_type": "photo",
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 158740,
+    "date": "2026-11-20T20:08:57+00:00",
+    "date_local": "2026-11-21T04:08:57+08:00",
+    "month": "2026-11",
+    "sender_id": 7123334832,
+    "text": "這群看起來跟BTC和ETH一樣死了😂",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
   }
 ]
