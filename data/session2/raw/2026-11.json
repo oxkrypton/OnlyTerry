@@ -1807,5 +1807,19 @@
     "reply_to_msg_id": null,
     "reply_quote": null,
     "deleted": false
+  },
+  {
+    "id": 159147,
+    "date": "2026-11-21T19:49:36+00:00",
+    "date_local": "2026-11-22T03:49:36+08:00",
+    "month": "2026-11",
+    "sender_id": 8500566474,
+    "text": "🔔 AlphaLab 實盤成交通知已啟用\n此 Crypto 話題將發布四策略經交易所確認的開倉與平倉，包含實際數量、成交均價、費用及可核實的損益。\n這是服務啟用公告，沒有新的交易成交。\nhttps://www.alphalab.site/category/crypto/trading",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
   }
 ]
