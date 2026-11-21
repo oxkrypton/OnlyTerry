@@ -1,0 +1,24 @@
+# 从 Clash Verge 导出【已展开】的完整配置（能直接看到明文 proxies: 节点列表），
+# 把内容整体粘贴过来，并保留 / 修正下面的顶层参数。
+# 务必搜索删除 tun: 配置块 —— 容器没有 NET_ADMIN 权限，开启 TUN 会启动失败。
+
+mixed-port: 11305
+allow-lan: true
+bind-address: "*"
+mode: rule
+log-level: warning
+
+# ↓↓↓ 以下仅为结构示意，请用你导出的真实内容替换 ↓↓↓
+# proxies:
+#   - name: node1
+#     type: ss
+#     server: x.x.x.x
+#     port: 443
+#     cipher: aes-128-gcm
+#     password: "..."
+# proxy-groups:
+#   - name: PROXY
+#     type: select
+#     proxies: [node1]
+# rules:
+#   - MATCH,PROXY   # 兜底必须走代理组！写成 DIRECT 会让 Telegram 流量直连而失败

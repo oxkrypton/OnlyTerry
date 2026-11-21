@@ -1,0 +1,39 @@
+# 部署目录：/opt/tg-bot/    启动：docker compose up -d
+services:
+  mihomo:
+    image: metacubex/mihomo:latest
+    container_name: tg-mihomo
+    restart: unless-stopped
+    volumes:
+      - ./mihomo/config.yaml:/root/.config/mihomo/config.yaml:ro
+    networks:
+      - tg-internal
+    # 官方镜像基于 alpine（非 scratch），自带 busybox nc，因此可做真实端口探测
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 11305 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+  tg-service:
+    image: tg-service:latest
+    container_name: tg-service
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      # 关键：SQLite 数据库、图片、tg.session、tg.updates.json（断线补包断点）
+      # 全部写在 data/service/。不挂载则重建容器时这些数据会随容器一起丢失。
+      - ./data/service:/app/data/service
+    depends_on:
+      mihomo:
+        condition: service_healthy
+    networks:
+      - tg-internal
+
+networks:
+  tg-internal:
+    driver: bridge
+    # 自定义 bridge 天然与其他 compose 项目的默认网络隔离；容器仍可访问公网。
+    # 不要设 internal: true，否则容器无法上网。
