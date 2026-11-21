@@ -77,8 +77,15 @@ TG_API_ID=...                          # my.telegram.org 应用凭证
 TG_API_HASH=...
 TG_SESSION=...                         # scripts/gen_session.py 生成的 StringSession
 TG_STATE_FILE=data/service/tg.updates.json  # 断线补包断点（默认值，可不写）；禁止多实例共享
-TG_CHANNEL_MAP_JSON={"1234567890":"us_stocks","987654321":"crypto"}
+TG_CHANNEL_MAP_JSON={"1234567890_1":"us_stocks","1234567890_2":"crypto"}  # 固定格式：裸群号_话题ID
 TARGET_AUTHOR_IDS=123456789
+PROXY=socks5h://127.0.0.1:11305    # 可选：TG 采集与 JEV 评分共用的 SOCKS5 出口
+```
+
+`PROXY` 同时作用于内置 TG 采集器和 TypeSafe JEV 评分：gotd 不读 `HTTP_PROXY` 环境变量，JEV 的 HTTP 客户端也只认这一项，留空则两者都直连。若日志出现 `JEV HTTP 451` / `Typesafe is not available in your region`，说明该出口地区不被 TypeSafe 支持，需换成可用的海外出口并 `sudo systemctl restart terry-alerts`。检查出口归属：
+
+```bash
+curl -x socks5h://127.0.0.1:11305 https://ipinfo.io/json
 ```
 
 权限收紧：

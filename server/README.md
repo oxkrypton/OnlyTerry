@@ -6,7 +6,7 @@
 
 - 内置 Telegram MTProto 采集器（gotd/td）：复用 Telethon StringSession 登录 userbot，实时监听目标群聊、断线重连、目标博主过滤、两个频道映射和消息去重。图片走 MTProto 下载后转存，无需外部 WebSocket 数据源。
 - 每个频道独立的两分钟静默窗口，新发言顺延；批次另设最长 15 分钟、最多 20 条的硬上限，高频发言下也会强制封箱打分。SQLite 持久化并支持重启恢复。
-- JEV 0–100 分价值判断，严格大于 80 才发送，不生成摘要。
+- JEV 0–100 分价值判断，得分大于等于 75（默认阈值）才发送，不生成摘要；评分请求与 TG 采集共用一个 SOCKS5 出口。
 - Resend 固定模板邮件、CID 原图、每收件人幂等键和失败重试。
 - 邮箱确认订阅、单频道或双频道、签名退订和 `List-Unsubscribe` 一键退订。
 - 图片单并发解码、5 MB 默认下载上限、2500 万像素上限和 SSRF 防护。
@@ -60,6 +60,16 @@ sudo chmod +x terry-alerts
 
 不需要 `git clone`、`go install`、`npm install` 或服务器端编译。
 
+## 网络出口
+
+`PROXY` 同时供 TG 采集器（gotd 的 MTProto）和 JEV 评分（HTTP）使用，支持 `socks5://host:port` 和 `socks5h://host:port`（后者由代理端解析域名）。留空则两者都直连。
+
+如果日志出现 `JEV HTTP 451：{"title":"Typesafe is not available in your region."}`, 说明当前出口地区不被 TypeSafe 支持，把 `PROXY` 指向可用的海外出口并重启服务。可以用下面的命令确认出口归属地：
+
+```bash
+curl -x socks5h://127.0.0.1:11305 https://ipinfo.io/json
+```
+
 ## 定时清理
 
 服务启动时清理一次，之后按 `CLEANUP_INTERVAL` 周期执行：
@@ -98,7 +108,8 @@ Telegram 图片由采集器通过 MTProto 下载到服务器、压缩转存为 J
 - **凭证**：`TG_API_ID`/`TG_API_HASH` 来自 my.telegram.org；`TG_SESSION` 由仓库根目录的 `scripts/gen_session.py` 生成。**建议为邮件服务单独生成一个全新 session**，与 `scripts/fetch_tg.py` 抓取脚本用的 session 互不影响（两者共用同一组 API_ID/API_HASH）。session 等价于账号完全控制权，请用专用小号。
 - **session 持久化**：gotd 刷新后的 session 写入 `TG_SESSION_FILE`（默认 `data/service/tg.session`），纳入备份；首次启动时由 `TG_SESSION` 字符串初始化。
 - **断线补包（防漏消息）**：gotd 内建的 `updates.Manager` 把每条消息按 `pts` 编号记账到 `TG_STATE_FILE`（默认 `data/service/tg.updates.json`）。断线或重启期间博主发的消息不会丢——恢复连接后按断点用 `getDifference` 自动补齐，再走同一条去重/聚合流水线。该文件与 session 文件一样纳入备份；空洞过大（服务端截断）时日志会告警。**禁止多实例共享此文件**。
-- **群聊 ID**：`TG_CHANNEL_MAP_JSON` 的 key 是群聊/频道的**纯数字 ID**。超级群（`-100…`）填去掉 `-100` 前缀的部分，普通频道填带符号完整 ID；与 gotd update 里的 `PeerChannel.ChannelID` 对齐。
+- **群聊 / 话题 ID**：`TG_CHANNEL_MAP_JSON` 的 key **固定为 `群号_话题ID` 一种格式**，例如 `3989060419_1`、`3989060419_2`。群号是 Telegram 的裸群 ID（gotd update 里的 `PeerChannel.ChannelID`），即 Web 链接 `web.telegram.org/a/#-1003989060419_1` 里完整 chat_id `-1003989060419` 去掉 `-100` 前缀后的 `3989060419`；下划线后的 `1` 是话题 ID。同一个群的不同话题可映射到不同频道。其他写法（纯群 ID 无话题、`-100`/`100` 前缀、冒号分隔）一律不识别。
+
 - **博主 ID**：`TARGET_AUTHOR_IDS` 填博主的纯数字 user ID，留空则处理该群所有作者。
 - **图片**：消息中的 photo 与 `image/*` document 通过 MTProto 下载后转 base64，交给现有 `ImageStore` 压缩转存，遵守 `MAX_IMAGES_PER_MESSAGE` 与 `MAX_IMAGE_BYTES` 限制。
 

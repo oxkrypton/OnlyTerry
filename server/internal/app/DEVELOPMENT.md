@@ -14,14 +14,14 @@ Terry Alerts 是一个「博主原始发言邮件订阅服务」。核心流水�
 
 ```
 Telegram 群聊 ──▶ 内置 MTProto 采集器(gotd/td) ──▶ 过滤/规范化 ──▶ 按频道聚合(静默窗口) ──▶ JEV 价值打分
-                                                                                              │ > 80 分
+                                                                                              │ ≥ 75 分（默认）
                                                                                               ▼
                                                                              SQLite 批次/投递记录 ◀── Resend 邮件群发(原文+原图)
 ```
 
 - 监听目标博主在 **美股（us_stocks）** 和 **加密货币（crypto）** 两个频道的实时发言。
 - 每个频道独立聚合一个静默窗口（默认 120 秒）内的发言为一个批次（Batch）；批次另有最长等待 15 分钟、最多 20 条消息的硬上限，任一触发即强制封箱，防止高频发言导致窗口被无限顺延。
-- 用 TypeSafe JEV 决策模型对批次打 0–100 分，**严格大于 `SCORE_THRESHOLD`（默认 80）** 才投递。
+- 用 TypeSafe JEV 决策模型对批次打 0–100 分，**大于等于 `SCORE_THRESHOLD`（默认 75）** 才投递。
 - 不做摘要：邮件只包含博主原文、发送时间（Asia/Shanghai）和原图（CID 内嵌）。
 - 订阅采用邮箱确认制（double opt-in），每封邮件带签名退订链接和 `List-Unsubscribe` 头。
 - 订阅前端托管在 GitHub Pages：服务端不内嵌订阅页，只对 `PAGES_URL` 来源放行跨域、把根路径重定向过去；保留的页面仅有确认/退订结果页（内联 HTML，是状态变更的落点，不可删除）。
@@ -79,7 +79,7 @@ Telegram 群聊 ──▶ 内置 MTProto 采集器(gotd/td) ──▶ 过滤/规
 | `MESSAGE_WINDOW_MS` | `120000` | 每频道聚合静默窗口（毫秒，≥1000） |
 | `MAX_BATCH_WAIT_MS` | `900000` | 批次自创建起的最长等待（毫秒），须大于窗口；到点强制封箱 |
 | `MAX_BATCH_MESSAGES` | `20` | 批次最多容纳的消息数（≥1），达到即封箱，后续消息另起一批 |
-| `SCORE_THRESHOLD` | `80` | 投递阈值，批次得分须**严格大于**该值（0–100） |
+| `SCORE_THRESHOLD` | `75` | 投递阈值，批次得分须**大于等于**该值（0–100） |
 | `RETRY_MS` | `60000` | 批次失败重试间隔（毫秒） |
 | `MAX_BATCH_ATTEMPTS` | `8` | 批次最大处理尝试次数（≥1），超限标记 `failed` |
 | `MAX_IMAGE_BYTES` | `5242880` | 单图下载上限（5 MB） |
@@ -97,7 +97,8 @@ Telegram 群聊 ──▶ 内置 MTProto 采集器(gotd/td) ──▶ 过滤/规
 | `TG_SESSION` | （启用时必填） | Telethon StringSession（`scripts/gen_session.py` 生成），建议为邮件服务单独生成 |
 | `TG_SESSION_FILE` | `data/service/tg.session` | gotd 刷新后 session 的落盘路径（登录凭证），纳入备份 |
 | `TG_STATE_FILE` | `data/service/tg.updates.json` | 断线补包断点文件（每群 pts 进度），重启后补回空洞消息，纳入备份；禁止多实例共享 |
-| `TG_CHANNEL_MAP_JSON` | 两频道同名映射 | 群聊数字 ID（超级群去掉 `-100`）→ 内部 `Channel` 的映射，未映射的消息丢弃 |
+| `PROXY` | 空（可选） | TG 采集与 JEV 评分共用的 SOCKS5 出口，仅支持 `socks5://` / `socks5h://`；gotd 与 JEV 的 HTTP 请求都走这里，留空则都直连；TypeSafe 返回 451 时需指向可用的海外出口 |
+| `TG_CHANNEL_MAP_JSON` | 两频道同名映射 | 群聊 → 内部 `Channel` 的映射，未映射的消息丢弃。**固定格式 `群号_话题ID`**（如 `3989060419_1`，群号是 gotd 的裸 `PeerChannel.ChannelID`，即 Web 链接 `web.telegram.org/a/#-1003989060419_1` 完整 chat_id 去掉 `-100` 前缀；下划线后为话题 ID），不同话题可映射到不同频道；其他写法一律不识别。代码不做任何前缀/格式转换。见 `channelOf` / `topicIDOf` |
 | `TARGET_AUTHOR_IDS` | 空 | 逗号分隔的目标博主数字 user ID；非空时只处理这些作者 |
 
 ## 5. 核心调度：Coordinator 与批次状态机
@@ -117,7 +118,7 @@ collecting ──窗口到期──▶ scoring ──成功且 ≤ 阈值──�
 关键不变量：
 
 - **静默窗口顺延（带硬上限）**：窗口期内每来一条新消息，批次 `due_at` 顺延到「该消息时间 + Window」，但不超过「批次创建时间 + MaxBatchWait」；同时消息数达到 `MaxMessages` 时 `due_at` 立即置为当前时间。任一硬上限触发后批次封箱，后续消息另起一批——避免持续发言把静默窗口无限顺延导致批次永不打分。
-- **严格大于阈值**：`Score <= ScoreThreshold` 即跳过（`skipped`）。
+- **大于等于阈值才投递**：`Score < ScoreThreshold` 即跳过（`skipped`）；代码默认阈值 75，部署 `.env` 当前覆盖为 70。灰区批次直接从数据库查 `batches.score` 与 `messages.text`，不再单独打日志。
 - **已批准不重打分**：批次进入 `approved` 后，后续重试只重发邮件（`deliver`），不再调用评分。
 - **幂等投递**：`deliveries` 表按 `(batch_id, subscriber_id)` 预占（`ReserveDelivery`），重试/重启不会给同一收件人重复发信。
 - **重启恢复**：`Recover()` 找出所有 `collecting/retrying/approved` 且未完成的批次重新排入定时器。
@@ -178,10 +179,11 @@ SQLite（WAL 模式，`foreign_keys = ON`，`busy_timeout = 5000`，单连接 `S
 
 ## 9. 价值评分：JevScorer
 
-- 请求构造：批次消息序列化为 `{author, sent_at, original_text, original_images}` 数组；全文上限 **48000 rune**（超限从头截断），图片上限 `MAX_SCORING_IMAGES`；图片以 multipart `file*` part 上传，`assets` 中以 `image-xxx` ref 关联。
-- 评分标准：6 档中文价值等级（`valueLevels`，从「无关闲聊」到「可核对的高价值交易信息」），输出 0–100 分、置信度与各档概率。
+- 请求构造：批次消息序列化为 `{author, sent_at, original_text, original_images}` 数组；`original_images` 无图时通过 `omitempty` 省略；全文上限 **48000 rune**（超限从头截断），图片上限 `MAX_SCORING_IMAGES`；图片以 multipart `file*` part 上传，`assets` 中以 `image-xxx` ref 关联。无图片时**必须完全省略 `assets` 字段**：TypeSafe 规定 `assets` 至少 1 项，传 `{}` 会返回 `400 Invalid request`。
+- 评分标准：6 档中文价值等级（`subscriptionCriteria`，从「无关闲聊」到「带核心依据的完整操作信号」）；问题文案为 `subscriptionQuestion`，明确「极简表达不扣分」。第 4 档涵盖「买入TSLA」这类极简动作，第 5 档要求附带核心依据或可执行细节。输出 0–100 分、置信度与各档概率。
 - HTTP 超时 45s；任何错误由 Coordinator 走重试。
-- **改评分提示词/档位/上下文字段必须同步本节**，并评估对阈值 80 语义的影响。
+- HTTP 出口与 TG 采集共用 `PROXY`：配置后通过 `x/net/proxy` 的 SOCKS5 拨号器连接，`socks5h` 由代理端解析域名；同时清空 `Transport.Proxy`，避免再叠加进程的 `HTTP_PROXY` 环境变量。未配置则用默认 Transport 直连。TypeSafe 对被判定为不支持的地区返回 `HTTP 451`，此时需检查该出口的归属地。
+- **改评分提示词/档位/上下文字段必须同步本节**，并评估对阈值 75 语义的影响。
 
 ## 10. 邮件：ResendMailer
 
