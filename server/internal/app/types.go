@@ -3,6 +3,7 @@ package app
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"time"
 )
 
 type Channel string
@@ -83,6 +84,15 @@ type Batch struct {
 	Error     string
 	CreatedAt int64
 	UpdatedAt int64
+}
+
+// BatchWindow 控制批次封箱的窗口策略。
+// Silence 为静默窗口；MaxWait 为批次自创建起的最长存活时间；MaxMessages 为批次最多容纳的消息数。
+// 后两者为硬上限，任一触发即强制封箱，防止高频消息流下静默窗口被无限顺延。
+type BatchWindow struct {
+	Silence     time.Duration
+	MaxWait     time.Duration
+	MaxMessages int
 }
 
 type BatchWithMessages struct {

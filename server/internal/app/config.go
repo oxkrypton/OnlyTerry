@@ -26,6 +26,8 @@ type Config struct {
 	ResendBaseURL         string
 	EmailFrom             string
 	Window                time.Duration
+	MaxBatchWait          time.Duration
+	MaxBatchMessages      int
 	ScoreThreshold        float64
 	Retry                 time.Duration
 	MaxBatchAttempts      int
@@ -115,9 +117,11 @@ func LoadConfig() Config {
 		TokenSecret: os.Getenv("TOKEN_SECRET"), TypeSafeAPIKey: os.Getenv("TYPESAFE_API_KEY"),
 		TypeSafeBaseURL: env("TYPESAFE_BASE_URL", "https://api.typesafe.ai"), JevModel: env("JEV_MODEL", "jev-latest"),
 		ResendAPIKey: os.Getenv("RESEND_API_KEY"), ResendBaseURL: env("RESEND_BASE_URL", "https://api.resend.com"),
-		EmailFrom:      env("EMAIL_FROM", "Terry Alerts <onboarding@resend.dev>"),
-		Window:         time.Duration(envInt("MESSAGE_WINDOW_MS", 120000)) * time.Millisecond,
-		ScoreThreshold: envFloat("SCORE_THRESHOLD", 80), Retry: time.Duration(envInt("RETRY_MS", 60000)) * time.Millisecond,
+		EmailFrom:        env("EMAIL_FROM", "Terry Alerts <onboarding@resend.dev>"),
+		Window:           time.Duration(envInt("MESSAGE_WINDOW_MS", 120000)) * time.Millisecond,
+		MaxBatchWait:     time.Duration(envInt("MAX_BATCH_WAIT_MS", 900000)) * time.Millisecond,
+		MaxBatchMessages: envInt("MAX_BATCH_MESSAGES", 20),
+		ScoreThreshold:   envFloat("SCORE_THRESHOLD", 80), Retry: time.Duration(envInt("RETRY_MS", 60000)) * time.Millisecond,
 		MaxBatchAttempts: envInt("MAX_BATCH_ATTEMPTS", 8), MaxImageBytes: envInt64("MAX_IMAGE_BYTES", 5*1024*1024),
 		MaxImagePixels: envInt("MAX_IMAGE_PIXELS", 25000000), MaxImagesPerMessage: envInt("MAX_IMAGES_PER_MESSAGE", 6),
 		MaxScoringImages: envInt("MAX_SCORING_IMAGES", 6), AllowPrivateImageURLs: envBool("ALLOW_PRIVATE_IMAGE_URLS", false),
@@ -129,6 +133,10 @@ func LoadConfig() Config {
 		WSSubscribeMessages: jsonEnv("WS_SUBSCRIBE_MESSAGES_JSON", []json.RawMessage{}), WSChannelMap: channels,
 		TargetAuthorIDs: authors,
 	}
+}
+
+func (c Config) batchWindow() BatchWindow {
+	return BatchWindow{Silence: c.Window, MaxWait: c.MaxBatchWait, MaxMessages: c.MaxBatchMessages}
 }
 
 func (c Config) Validate() error {
@@ -154,6 +162,9 @@ func (c Config) Validate() error {
 	}
 	if c.Window < time.Second || c.CleanupInterval <= 0 || c.ImageRetention <= 0 || c.DatabaseRetention <= 0 {
 		return fmt.Errorf("窗口和清理周期配置无效")
+	}
+	if c.MaxBatchWait <= c.Window || c.MaxBatchMessages < 1 {
+		return fmt.Errorf("批次硬上限配置无效：MAX_BATCH_WAIT_MS 必须大于 MESSAGE_WINDOW_MS，MAX_BATCH_MESSAGES 必须大于 0")
 	}
 	if c.ScoreThreshold < 0 || c.ScoreThreshold > 100 || c.MaxBatchAttempts < 1 {
 		return fmt.Errorf("评分阈值或重试配置无效")

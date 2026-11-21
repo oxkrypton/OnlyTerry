@@ -24,7 +24,7 @@ func TestCleanupKeepsReferencedImagesThenDeletesExpiredData(t *testing.T) {
 	}
 	message := testMessage()
 	message.Images = []StoredImage{{FileName: "old.jpg", MIMEType: "image/jpeg", Width: 800, Height: 600}}
-	batch, err := store.AppendMessage(message, config.Window)
+	batch, err := store.AppendMessage(message, config.batchWindow())
 	if err != nil {
 		t.Fatal(err)
 	}

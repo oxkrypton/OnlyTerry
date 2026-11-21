@@ -1,10 +1,15 @@
 package app
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
 )
+
+func testWindow() BatchWindow {
+	return BatchWindow{Silence: 2 * time.Minute, MaxWait: 10 * time.Minute, MaxMessages: 20}
+}
 
 func TestWindowExtendsAndDeduplicates(t *testing.T) {
 	now := time.UnixMilli(1000000)
@@ -13,7 +18,7 @@ func TestWindowExtendsAndDeduplicates(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer store.Close()
-	first, err := store.AppendMessage(testMessage(), 2*time.Minute)
+	first, err := store.AppendMessage(testMessage(), testWindow())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -23,20 +28,95 @@ func TestWindowExtendsAndDeduplicates(t *testing.T) {
 	now = now.Add(time.Minute)
 	secondMessage := testMessage()
 	secondMessage.ID, secondMessage.Text = "m2", "第二条"
-	second, err := store.AppendMessage(secondMessage, 2*time.Minute)
+	second, err := store.AppendMessage(secondMessage, testWindow())
 	if err != nil {
 		t.Fatal(err)
 	}
 	if second.ID != first.ID || second.DueAt != now.Add(2*time.Minute).UnixMilli() {
 		t.Fatal("窗口没有正确延长")
 	}
-	duplicate, err := store.AppendMessage(testMessage(), 2*time.Minute)
+	duplicate, err := store.AppendMessage(testMessage(), testWindow())
 	if err != nil || duplicate != nil {
 		t.Fatal("重复消息未去重")
 	}
 	batch, err := store.GetBatchWithMessages(first.ID)
 	if err != nil || len(batch.Messages) != 2 {
 		t.Fatal("消息未合并到同一批")
+	}
+}
+
+func TestMaxWaitCapsDueAtUnderContinuousMessages(t *testing.T) {
+	now := time.UnixMilli(1000000)
+	start := now
+	store, err := newStore(":memory:", func() time.Time { return now })
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	policy := BatchWindow{Silence: 2 * time.Minute, MaxWait: 10 * time.Minute, MaxMessages: 1000}
+
+	var batch *Batch
+	for i := 0; i < 6; i++ {
+		batch, err = store.AppendMessage(testMessageWithID(fmt.Sprintf("m%d", i)), policy)
+		if err != nil {
+			t.Fatal(err)
+		}
+		now = now.Add(90 * time.Second)
+	}
+	if want := start.Add(9*time.Minute + 30*time.Second).UnixMilli(); batch.DueAt != want {
+		t.Fatalf("静默窗口顺延异常：due_at=%d, want=%d", batch.DueAt, want)
+	}
+	// 第 7 条在 t=9min 到达，理论 due=11min，应被 10min 硬上限截断
+	batch, err = store.AppendMessage(testMessageWithID("m6"), policy)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := start.Add(10 * time.Minute).UnixMilli(); batch.DueAt != want {
+		t.Fatalf("最长等待时长未截断 due_at：due_at=%d, want=%d", batch.DueAt, want)
+	}
+}
+
+func TestMaxMessagesSealsBatchAndStartsNewOne(t *testing.T) {
+	now := time.UnixMilli(1000000)
+	store, err := newStore(":memory:", func() time.Time { return now })
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	policy := BatchWindow{Silence: 2 * time.Minute, MaxWait: 10 * time.Minute, MaxMessages: 3}
+
+	first, err := store.AppendMessage(testMessageWithID("m1"), policy)
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := store.AppendMessage(testMessageWithID("m2"), policy)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if first.ID != second.ID || second.DueAt != now.Add(2*time.Minute).UnixMilli() {
+		t.Fatal("未满上限时窗口应正常顺延")
+	}
+	third, err := store.AppendMessage(testMessageWithID("m3"), policy)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if third.ID != first.ID || third.DueAt != now.UnixMilli() {
+		t.Fatalf("达到条数上限应立即封箱：due_at=%d, want=%d", third.DueAt, now.UnixMilli())
+	}
+	filled, err := store.GetBatchWithMessages(third.ID)
+	if err != nil || len(filled.Messages) != 3 {
+		t.Fatalf("封箱批次应含 3 条消息，实际 %d", len(filled.Messages))
+	}
+	fourth, err := store.AppendMessage(testMessageWithID("m4"), policy)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if fourth.ID == first.ID {
+		t.Fatal("封箱后新消息应另起批次")
+	}
+	fresh, err := store.GetBatchWithMessages(fourth.ID)
+	if err != nil || len(fresh.Messages) != 1 {
+		t.Fatalf("新批次应含 1 条消息，实际 %d", len(fresh.Messages))
 	}
 }
 

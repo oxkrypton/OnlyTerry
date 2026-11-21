@@ -203,7 +203,7 @@ func (s *Store) HasMessage(channel Channel, externalID string) (bool, error) {
 	return err == nil, err
 }
 
-func (s *Store) AppendMessage(message StoredMessage, window time.Duration) (*Batch, error) {
+func (s *Store) AppendMessage(message StoredMessage, policy BatchWindow) (*Batch, error) {
 	tx, err := s.db.Begin()
 	if err != nil {
 		return nil, err
@@ -218,18 +218,44 @@ func (s *Store) AppendMessage(message StoredMessage, window time.Duration) (*Bat
 		return nil, err
 	}
 	now := s.timestamp()
-	due := s.now().Add(window).UnixMilli()
+
+	// 只向尚未到期的 collecting 批次追加；已到期的批次正在等待封箱，
+	// 新消息另起一批，避免封箱前又被追加进去。
 	var batchID string
-	err = tx.QueryRow(`SELECT id FROM batches WHERE channel=? AND status='collecting'`, message.Channel).Scan(&batchID)
+	var batchCreatedAt int64
+	var messageCount int
+	isNew := false
+	err = tx.QueryRow(`SELECT id, created_at FROM batches WHERE channel=? AND status='collecting' AND due_at > ?`, message.Channel, now).Scan(&batchID, &batchCreatedAt)
 	if err == sql.ErrNoRows {
+		isNew = true
 		batchID = RandomID()
+		batchCreatedAt = now
+	} else if err != nil {
+		return nil, err
+	} else if err = tx.QueryRow(`SELECT COUNT(*) FROM messages WHERE batch_id=?`, batchID).Scan(&messageCount); err != nil {
+		return nil, err
+	}
+
+	// due_at = min(最后一条消息 + 静默窗口, 批次创建 + 最长等待时长)，
+	// 再叠加条数硬上限：加入这条后达到上限则立即到期。
+	due := s.now().Add(policy.Silence).UnixMilli()
+	if policy.MaxWait > 0 {
+		if maxDue := time.UnixMilli(batchCreatedAt).Add(policy.MaxWait).UnixMilli(); due > maxDue {
+			due = maxDue
+		}
+	}
+	if policy.MaxMessages > 0 && messageCount+1 >= policy.MaxMessages {
+		due = now
+	}
+	if due < now {
+		due = now
+	}
+
+	if isNew {
 		if _, err = tx.Exec(`INSERT INTO batches(id,channel,status,due_at,created_at,updated_at) VALUES(?,?,'collecting',?,?,?)`, batchID, message.Channel, due, now, now); err != nil {
 			return nil, err
 		}
-	} else if err != nil {
-		return nil, err
-	}
-	if _, err = tx.Exec(`UPDATE batches SET due_at=?,updated_at=?,error=NULL WHERE id=?`, due, now, batchID); err != nil {
+	} else if _, err = tx.Exec(`UPDATE batches SET due_at=?,updated_at=?,error=NULL WHERE id=?`, due, now, batchID); err != nil {
 		return nil, err
 	}
 	result, err := tx.Exec(`INSERT INTO messages(batch_id,external_id,channel,author_id,author_name,sent_at,text,created_at) VALUES(?,?,?,?,?,?,?,?)`, batchID, message.ID, message.Channel, message.AuthorID, message.AuthorName, message.SentAt, message.Text, now)

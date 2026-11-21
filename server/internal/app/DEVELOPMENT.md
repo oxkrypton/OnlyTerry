@@ -20,7 +20,7 @@ Terry Alerts 是一个「博主原始发言邮件订阅服务」。核心流水�
 ```
 
 - 监听目标博主在 **美股（us_stocks）** 和 **加密货币（crypto）** 两个频道的实时发言。
-- 每个频道独立聚合一个静默窗口（默认 120 秒）内的发言为一个批次（Batch）。
+- 每个频道独立聚合一个静默窗口（默认 120 秒）内的发言为一个批次（Batch）；批次另有最长等待 15 分钟、最多 20 条消息的硬上限，任一触发即强制封箱，防止高频发言导致窗口被无限顺延。
 - 用 TypeSafe JEV 决策模型对批次打 0–100 分，**严格大于 `SCORE_THRESHOLD`（默认 80）** 才投递。
 - 不做摘要：邮件只包含博主原文、发送时间（Asia/Shanghai）和原图（CID 内嵌）。
 - 订阅采用邮箱确认制（double opt-in），每封邮件带签名退订链接和 `List-Unsubscribe` 头。
@@ -78,6 +78,8 @@ Terry Alerts 是一个「博主原始发言邮件订阅服务」。核心流水�
 | `RESEND_BASE_URL` | `https://api.resend.com` | Resend API 地址 |
 | `EMAIL_FROM` | `Terry Alerts <onboarding@resend.dev>` | 发件人 |
 | `MESSAGE_WINDOW_MS` | `120000` | 每频道聚合静默窗口（毫秒，≥1000） |
+| `MAX_BATCH_WAIT_MS` | `900000` | 批次自创建起的最长等待（毫秒），须大于窗口；到点强制封箱 |
+| `MAX_BATCH_MESSAGES` | `20` | 批次最多容纳的消息数（≥1），达到即封箱，后续消息另起一批 |
 | `SCORE_THRESHOLD` | `80` | 投递阈值，批次得分须**严格大于**该值（0–100） |
 | `RETRY_MS` | `60000` | 批次失败重试间隔（毫秒） |
 | `MAX_BATCH_ATTEMPTS` | `8` | 批次最大处理尝试次数（≥1），超限标记 `failed` |
@@ -114,7 +116,7 @@ collecting ──窗口到期──▶ scoring ──成功且 ≤ 阈值──�
 
 关键不变量：
 
-- **静默窗口顺延**：窗口期内每来一条新消息，批次 `due_at` 顺延到「该消息时间 + Window」，窗口静默后才触发打分。
+- **静默窗口顺延（带硬上限）**：窗口期内每来一条新消息，批次 `due_at` 顺延到「该消息时间 + Window」，但不超过「批次创建时间 + MaxBatchWait」；同时消息数达到 `MaxMessages` 时 `due_at` 立即置为当前时间。任一硬上限触发后批次封箱，后续消息另起一批——避免持续发言把静默窗口无限顺延导致批次永不打分。
 - **严格大于阈值**：`Score <= ScoreThreshold` 即跳过（`skipped`）。
 - **已批准不重打分**：批次进入 `approved` 后，后续重试只重发邮件（`deliver`），不再调用评分。
 - **幂等投递**：`deliveries` 表按 `(batch_id, subscriber_id)` 预占（`ReserveDelivery`），重试/重启不会给同一收件人重复发信。

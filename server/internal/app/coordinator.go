@@ -25,7 +25,7 @@ func NewCoordinator(config Config, store *Store, scorer Scorer, mailer Mailer, t
 	return &Coordinator{config: config, store: store, scorer: scorer, mailer: mailer, tokens: tokens, timers: map[string]*time.Timer{}, running: map[string]bool{}}
 }
 func (c *Coordinator) Accept(message StoredMessage) (*Batch, error) {
-	batch, err := c.store.AppendMessage(message, c.config.Window)
+	batch, err := c.store.AppendMessage(message, c.config.batchWindow())
 	if err != nil || batch == nil {
 		return batch, err
 	}

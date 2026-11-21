@@ -11,7 +11,7 @@ func testConfig(t *testing.T) Config {
 	directory := t.TempDir()
 	return Config{PublicURL: "http://127.0.0.1:3000", PagesURL: "https://pages.example.com", DatabasePath: filepath.Join(directory, "service.db"), ImageDir: filepath.Join(directory, "images"),
 		TokenSecret: "test-secret-test-secret-test-secret-32", TypeSafeAPIKey: "test", ResendAPIKey: "test", TypeSafeBaseURL: "http://127.0.0.1", ResendBaseURL: "http://127.0.0.1",
-		EmailFrom: "Test <test@example.com>", Window: 120000000000, ScoreThreshold: 80, Retry: 60000000000, MaxBatchAttempts: 8,
+		EmailFrom: "Test <test@example.com>", Window: 120000000000, MaxBatchWait: 900000000000, MaxBatchMessages: 20, ScoreThreshold: 80, Retry: 60000000000, MaxBatchAttempts: 8,
 		MaxImageBytes: 5 * 1024 * 1024, MaxImagePixels: 25000000, MaxImagesPerMessage: 6, MaxScoringImages: 6,
 		ResendRemoteImages: true, CleanupInterval: 3600000000000, ImageRetention: 168 * 36000000000, DatabaseRetention: 720 * 36000000000,
 		WSChannelMap: map[string]Channel{"room-us": ChannelUS, "room-crypto": ChannelCrypto}, TargetAuthorIDs: map[string]bool{"blogger": true}}
@@ -74,4 +74,10 @@ func subscribeForTest(t *testing.T, store *Store, email string, channels []Chann
 }
 func testMessage() StoredMessage {
 	return StoredMessage{ID: "m1", Channel: ChannelUS, AuthorID: "blogger", AuthorName: "Terry", SentAt: "2026-11-16T12:00:00Z", Text: "NVDA 100 买入，止损 95"}
+}
+
+func testMessageWithID(id string) StoredMessage {
+	message := testMessage()
+	message.ID = id
+	return message
 }
