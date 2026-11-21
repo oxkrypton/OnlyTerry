@@ -15,7 +15,7 @@ https://api.你的域名.com   ← Caddy：自动 HTTPS、反代
    ▼
 terry-alerts（systemd 常驻，terryalerts 用户）
    ├─ HTTP API：订阅 / 确认 / 退订 / healthz
-   ├─ WebSocket 监听上游群聊 → 聚合 → JEV 打分 → Resend 发邮件
+   ├─ 内置 MTProto 采集器监听 TG 群聊 → 聚合 → JEV 打分 → Resend 发邮件
    └─ 内置定时清理（SQLite + 图片，存 data/service/）
 ```
 
@@ -73,7 +73,12 @@ PAGES_URL=https://你的用户名.github.io     # Pages 前端，CORS 只放行�
 TOKEN_SECRET=$(openssl rand -hex 32)       # 至少 32 字符的随机串
 TYPESAFE_API_KEY=...
 RESEND_API_KEY=...
-WS_URL=wss://上游群聊地址
+TG_API_ID=...                          # my.telegram.org 应用凭证
+TG_API_HASH=...
+TG_SESSION=...                         # scripts/gen_session.py 生成的 StringSession
+TG_STATE_FILE=data/service/tg.updates.json  # 断线补包断点（默认值，可不写）；禁止多实例共享
+TG_CHANNEL_MAP_JSON={"1234567890":"us_stocks","987654321":"crypto"}
+TARGET_AUTHOR_IDS=123456789
 ```
 
 权限收紧：
@@ -83,7 +88,7 @@ sudo chown -R terryalerts:terryalerts /opt/terry-alerts
 sudo chmod 600 /opt/terry-alerts/.env
 ```
 
-数据目录 `data/service/`（SQLite + 图片）由服务首次启动时自动创建。
+数据目录 `data/service/`（SQLite + 图片 + `tg.session` 登录凭证 + `tg.updates.json` 补包断点）由服务首次启动时自动创建。
 
 ## 4. systemd 常驻
 
@@ -177,9 +182,9 @@ sudo systemctl start terry-alerts
 
 ## 9. 备份与注意事项
 
-- 备份整个 `data/service/` 目录即可（SQLite + 图片）。
+- 备份整个 `data/service/` 目录即可（SQLite + 图片 + session 凭证 + 补包断点）。
 - **不要**在服务运行中直接复制 SQLite 文件：先 `systemctl stop`，或使用 SQLite 在线备份。
-- 单台服务器只运行一个实例（WebSocket 上游和幂等键均假设单实例）。
+- 单台服务器只运行一个实例（session 与投递幂等键均假设单实例）。
 - 日志排查：`journalctl -u terry-alerts --since "1 hour ago"`。
 
 ## 10. 前端（GitHub Pages）

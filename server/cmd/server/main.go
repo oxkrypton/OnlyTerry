@@ -35,7 +35,9 @@ func main() {
 	scorer := app.NewJevScorer(config)
 	coordinator := app.NewCoordinator(config, store, scorer, mailer, tokens)
 	images := app.NewImageStore(config)
-	socket := app.NewGroupSocket(config, func(message app.IncomingMessage) error {
+	// 内置 MTProto 采集器：收到消息后交给统一 handler（去重 → 图片 → 入窗）。
+	// handler 与上游无关，WS 方案删除后原样保留。
+	tgSource := app.NewTgSource(config, func(message app.IncomingMessage) error {
 		duplicate, err := store.HasMessage(message.Channel, message.ID)
 		if err != nil || duplicate {
 			return err
@@ -54,8 +56,8 @@ func main() {
 	defer stop()
 	cleaner := app.NewCleaner(config, store)
 	go cleaner.Run(ctx)
-	if config.WSEnabled {
-		go socket.Run(ctx)
+	if config.TGEnabled {
+		go tgSource.Run(ctx)
 	}
 	httpServer := &http.Server{Addr: fmt.Sprintf("%s:%d", config.Host, config.Port), Handler: app.NewHTTPHandler(config, store, tokens, mailer), ReadHeaderTimeout: 10 * time.Second, ReadTimeout: 30 * time.Second, WriteTimeout: 60 * time.Second, IdleTimeout: 60 * time.Second}
 	errorsCh := make(chan error, 1)

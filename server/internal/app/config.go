@@ -40,12 +40,13 @@ type Config struct {
 	CleanupInterval       time.Duration
 	ImageRetention        time.Duration
 	DatabaseRetention     time.Duration
-	WSEnabled             bool
-	WSURL                 string
-	WSAuthToken           string
-	WSHeaders             map[string]string
-	WSSubscribeMessages   []json.RawMessage
-	WSChannelMap          map[string]Channel
+	TGEnabled             bool
+	TGAPIID               int
+	TGAPIHash             string
+	TGSession             string
+	TGSessionFile         string
+	TGStateFile           string
+	TGChannelMap          map[string]Channel
 	TargetAuthorIDs       map[string]bool
 }
 
@@ -102,7 +103,7 @@ func jsonEnv[T any](key string, fallback T) T {
 }
 
 func LoadConfig() Config {
-	channels := jsonEnv("WS_CHANNEL_MAP_JSON", map[string]Channel{string(ChannelUS): ChannelUS, string(ChannelCrypto): ChannelCrypto})
+	channels := jsonEnv("TG_CHANNEL_MAP_JSON", map[string]Channel{string(ChannelUS): ChannelUS, string(ChannelCrypto): ChannelCrypto})
 	authors := map[string]bool{}
 	for _, id := range strings.Split(os.Getenv("TARGET_AUTHOR_IDS"), ",") {
 		if id = strings.TrimSpace(id); id != "" {
@@ -128,9 +129,11 @@ func LoadConfig() Config {
 		ResendRemoteImages: envBool("RESEND_REMOTE_IMAGES", true),
 		CleanupInterval:    envDuration("CLEANUP_INTERVAL", time.Hour), ImageRetention: envDuration("IMAGE_RETENTION", 168*time.Hour),
 		DatabaseRetention: envDuration("DB_RETENTION", 720*time.Hour),
-		WSEnabled:         envBool("WS_ENABLED", true), WSURL: os.Getenv("WS_URL"), WSAuthToken: os.Getenv("WS_AUTH_TOKEN"),
-		WSHeaders:           jsonEnv("WS_HEADERS_JSON", map[string]string{}),
-		WSSubscribeMessages: jsonEnv("WS_SUBSCRIBE_MESSAGES_JSON", []json.RawMessage{}), WSChannelMap: channels,
+		TGEnabled:         envBool("TG_ENABLED", true), TGAPIID: envInt("TG_API_ID", 0),
+		TGAPIHash: os.Getenv("TG_API_HASH"), TGSession: os.Getenv("TG_SESSION"),
+		TGSessionFile:   env("TG_SESSION_FILE", "data/service/tg.session"),
+		TGStateFile:     env("TG_STATE_FILE", "data/service/tg.updates.json"),
+		TGChannelMap:    channels,
 		TargetAuthorIDs: authors,
 	}
 }
@@ -146,10 +149,15 @@ func (c Config) Validate() error {
 	if c.TypeSafeAPIKey == "" || c.ResendAPIKey == "" {
 		return fmt.Errorf("缺少 TYPESAFE_API_KEY 或 RESEND_API_KEY")
 	}
-	if c.WSEnabled {
-		u, err := url.Parse(c.WSURL)
-		if err != nil || (u.Scheme != "ws" && u.Scheme != "wss") {
-			return fmt.Errorf("WS_URL 必须是有效的 ws/wss URL")
+	if c.TGEnabled {
+		if c.TGAPIID == 0 || c.TGAPIHash == "" {
+			return fmt.Errorf("TG_ENABLED 时必须配置 TG_API_ID 与 TG_API_HASH")
+		}
+		if c.TGSession == "" {
+			return fmt.Errorf("TG_ENABLED 时必须配置 TG_SESSION（Telethon StringSession）")
+		}
+		if c.TGSessionFile == "" || c.TGStateFile == "" {
+			return fmt.Errorf("TG_ENABLED 时必须配置 TG_SESSION_FILE 与 TG_STATE_FILE（断线补包断点）")
 		}
 	}
 	if u, err := url.Parse(c.PublicURL); err != nil || (u.Scheme != "http" && u.Scheme != "https") {
@@ -169,7 +177,7 @@ func (c Config) Validate() error {
 	if c.ScoreThreshold < 0 || c.ScoreThreshold > 100 || c.MaxBatchAttempts < 1 {
 		return fmt.Errorf("评分阈值或重试配置无效")
 	}
-	for _, channel := range c.WSChannelMap {
+	for _, channel := range c.TGChannelMap {
 		if !ValidChannel(channel) {
 			return fmt.Errorf("未知频道：%s", channel)
 		}

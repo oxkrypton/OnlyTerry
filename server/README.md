@@ -4,7 +4,7 @@
 
 ## 功能
 
-- WebSocket 监听、断线重连、目标博主过滤、两个频道映射和消息去重。
+- 内置 Telegram MTProto 采集器（gotd/td）：复用 Telethon StringSession 登录 userbot，实时监听目标群聊、断线重连、目标博主过滤、两个频道映射和消息去重。图片走 MTProto 下载后转存，无需外部 WebSocket 数据源。
 - 每个频道独立的两分钟静默窗口，新发言顺延；批次另设最长 15 分钟、最多 20 条的硬上限，高频发言下也会强制封箱打分。SQLite 持久化并支持重启恢复。
 - JEV 0–100 分价值判断，严格大于 80 才发送，不生成摘要。
 - Resend 固定模板邮件、CID 原图、每收件人幂等键和失败重试。
@@ -87,33 +87,22 @@ DB_RETENTION=720h
 RESEND_REMOTE_IMAGES=true
 ```
 
-WebSocket 图片有公开 URL 时，服务器仍会下载并压缩一份供 JEV 评分，但发给 Resend 的附件只包含远程 `path` 和 CID。Resend 从图片源拉取原图，避免“订阅者人数 × 图片大小”的服务器上行流量。
+Telegram 图片由采集器通过 MTProto 下载到服务器、压缩转存为 JPEG 后再供 JEV 评分与邮件使用。这类图片没有公开 URL（`SourceURL` 为空），因此**始终从服务器上传处理后的 JPEG**，不受 `RESEND_REMOTE_IMAGES` 影响。多订阅者时会消耗相应上行带宽，这是 TG 数据源的固有行为。
 
-- 群聊直接提供 base64 图片时会自动回退；
-- 原图 URL 需要鉴权、不是公网地址或很快过期时，应设置 `RESEND_REMOTE_IMAGES=false`，此时会从服务器上传处理后的 JPEG。
+`RESEND_REMOTE_IMAGES=true` 仅对带公开原图 URL 的图片生效（如未来接入其它上游）：服务器压缩一份供评分，发给 Resend 的附件只带远程 `path` 和 CID，由 Resend 从图片源拉取原图，避免“订阅者人数 × 图片大小”的服务器上行流量。
 
-如果原图 URL 需要鉴权或很快过期，应使用对象存储保存处理图并提供长期可访问 URL，或关闭远程模式。关闭远程模式时，多订阅者会消耗较多上行带宽。
+## Telegram 数据源（内置采集器）
 
-## WebSocket 输入
+服务启动时用 `TG_SESSION`（Telethon StringSession）以 userbot 身份登录 Telegram MTProto，实时监听 `TG_CHANNEL_MAP_JSON` 中配置的群聊/频道，过滤出 `TARGET_AUTHOR_IDS` 里的博主发言，规范化后进入聚合流水线。断线重连、心跳、DC 迁移由 gotd/td 处理。
 
-默认接受规范结构及常见字段别名：
+- **凭证**：`TG_API_ID`/`TG_API_HASH` 来自 my.telegram.org；`TG_SESSION` 由仓库根目录的 `scripts/gen_session.py` 生成。**建议为邮件服务单独生成一个全新 session**，与 `scripts/fetch_tg.py` 抓取脚本用的 session 互不影响（两者共用同一组 API_ID/API_HASH）。session 等价于账号完全控制权，请用专用小号。
+- **session 持久化**：gotd 刷新后的 session 写入 `TG_SESSION_FILE`（默认 `data/service/tg.session`），纳入备份；首次启动时由 `TG_SESSION` 字符串初始化。
+- **断线补包（防漏消息）**：gotd 内建的 `updates.Manager` 把每条消息按 `pts` 编号记账到 `TG_STATE_FILE`（默认 `data/service/tg.updates.json`）。断线或重启期间博主发的消息不会丢——恢复连接后按断点用 `getDifference` 自动补齐，再走同一条去重/聚合流水线。该文件与 session 文件一样纳入备份；空洞过大（服务端截断）时日志会告警。**禁止多实例共享此文件**。
+- **群聊 ID**：`TG_CHANNEL_MAP_JSON` 的 key 是群聊/频道的**纯数字 ID**。超级群（`-100…`）填去掉 `-100` 前缀的部分，普通频道填带符号完整 ID；与 gotd update 里的 `PeerChannel.ChannelID` 对齐。
+- **博主 ID**：`TARGET_AUTHOR_IDS` 填博主的纯数字 user ID，留空则处理该群所有作者。
+- **图片**：消息中的 photo 与 `image/*` document 通过 MTProto 下载后转 base64，交给现有 `ImageStore` 压缩转存，遵守 `MAX_IMAGES_PER_MESSAGE` 与 `MAX_IMAGE_BYTES` 限制。
 
-```json
-{
-  "type": "message",
-  "id": "provider-message-id",
-  "channel": "room-us",
-  "author": {"id": "blogger-id", "name": "Terry"},
-  "sent_at": "2026-11-16T12:00:00Z",
-  "text": "NVDA 100 买入，止损 95",
-  "images": [
-    {"url": "https://cdn.example.com/order.jpg"},
-    {"data_base64": "/9j/4AAQSkZJRg..."}
-  ]
-}
-```
-
-`WS_CHANNEL_MAP_JSON` 映射外部频道 ID；`TARGET_AUTHOR_IDS` 是逗号分隔的博主 ID。连接成功后按顺序发送 `WS_SUBSCRIBE_MESSAGES_JSON` 中的订阅帧。实际协议不同只需调整 `internal/app/message_parser.go`。
+相关实现在 `internal/app/tg_source.go`；消息字段映射与过滤是纯函数，单测在 `tg_source_test.go`。
 
 ## HTTP 入口
 

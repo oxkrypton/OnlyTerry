@@ -4,7 +4,7 @@
 >
 > 本文档是 `server/internal/app` 模块的唯一权威开发文档。任何改变模块行为的代码修改（新增/修改/删除配置项、数据库表结构、HTTP 接口、状态机流转、外部 API 调用、文件职责划分、默认值、阈值等），**都必须在同一个提交中更新本文档的对应章节**。评审时若发现代码与文档不一致，一律以文档为准要求回退或补文档。
 >
-> 文档最后更新：2026-11-16（与代码基线同步）。
+> 文档最后更新：2026-11-21（切换为内置 Telegram MTProto 采集器；接入 updates.Manager 实现断线补包防消息空洞）。
 
 ---
 
@@ -13,10 +13,10 @@
 Terry Alerts 是一个「博主原始发言邮件订阅服务」。核心流水线：
 
 ```
-群聊 WebSocket ──▶ 消息解析/过滤 ──▶ 按频道聚合(静默窗口) ──▶ JEV 价值打分
-                                                                   │ > 80 分
-                                                                   ▼
-                                              SQLite 批次/投递记录 ◀── Resend 邮件群发(原文+原图)
+Telegram 群聊 ──▶ 内置 MTProto 采集器(gotd/td) ──▶ 过滤/规范化 ──▶ 按频道聚合(静默窗口) ──▶ JEV 价值打分
+                                                                                              │ > 80 分
+                                                                                              ▼
+                                                                             SQLite 批次/投递记录 ◀── Resend 邮件群发(原文+原图)
 ```
 
 - 监听目标博主在 **美股（us_stocks）** 和 **加密货币（crypto）** 两个频道的实时发言。
@@ -32,10 +32,10 @@ Terry Alerts 是一个「博主原始发言邮件订阅服务」。核心流水�
 入口：`server/cmd/server/main.go`，装配顺序：
 
 1. `LoadDotEnv(".env")` → `LoadConfig()` → `config.Validate()`，校验失败直接退出。
-2. 依次构造：`Store`（SQLite）→ `Tokens`（HMAC 签名）→ `ResendMailer` → `JevScorer` → `Coordinator` → `ImageStore` → `GroupSocket`。
-3. WS 消息回调流水线：`store.HasMessage` 去重 → `images.Prepare` 下载转存图片 → 空消息丢弃 → `coordinator.Accept` 入库并入窗。
+2. 依次构造：`Store`（SQLite）→ `Tokens`（HMAC 签名）→ `ResendMailer` → `JevScorer` → `Coordinator` → `ImageStore` → `TgSource`。
+3. 消息回调流水线（与上游无关）：`store.HasMessage` 去重 → `images.Prepare` 下载转存图片 → 空消息丢弃 → `coordinator.Accept` 入库并入窗。
 4. `coordinator.Recover()` 从数据库恢复未完成批次（重启不丢窗口）。
-5. 后台 goroutine：`Cleaner.Run`（定时清理）、`GroupSocket.Run`（WS 监听，`WS_ENABLED` 可关）。
+5. 后台 goroutine：`Cleaner.Run`（定时清理）、`TgSource.Run`（内置 MTProto 监听，`TG_ENABLED` 可关）。
 6. HTTP 服务监听 `HOST:PORT`；收到 `SIGINT/SIGTERM` 后停止 Coordinator、10 秒内优雅关闭。
 
 部署：`server/deploy/terry-alerts.service`（systemd unit）。构建与发布见 `server/Makefile`（`make release` 产出 Linux amd64/arm64 tar 包）。
@@ -48,15 +48,14 @@ Terry Alerts 是一个「博主原始发言邮件订阅服务」。核心流水�
 | `config.go` | `Config`、`LoadConfig()`、`Validate()`、`LoadDotEnv()` | 环境变量解析（含默认值）、启动校验、`.env` 加载（不覆盖已有环境变量） |
 | `coordinator.go` | `Coordinator` | 核心调度器：窗口定时、打分、重试、投递编排（见 §5） |
 | `store.go` | `Store` | SQLite 持久化与全部 SQL（见 §6） |
-| `websocket.go` | `GroupSocket` | 上游群聊 WS 连接、鉴权、订阅、断线重连（见 §7） |
-| `message_parser.go` | `NormalizeSocketMessage()` | 容错解析上游多种嵌套消息格式 → `IncomingMessage` |
+| `tg_source.go` | `TgSource`、`tgProcessor`、`channelOf`、`authorOf`、`largestPhotoSize` | 内置 Telegram MTProto 采集器：StringSession 登录、updates.Manager 断线补包、群聊/作者过滤、消息规范化、MTProto 图片下载（见 §7） |
 | `images.go` | `ImageStore` | 图片下载、校验、转码、落盘，SSRF 防护（见 §8） |
 | `jev.go` | `JevScorer` | 调用 TypeSafe JEV 模型打分（见 §9） |
 | `mail.go` | `ResendMailer`、`RenderAlertEmail()` | 确认邮件与告警邮件渲染、Resend API 发送（见 §10） |
 | `tokens.go` | `Tokens` | HMAC-SHA256 签名 token：确认链接（48h 有效）、退订链接（见 §11） |
 | `http.go` | `HTTPHandler` | HTTP 路由、限流、Pages 跨域放行与预检、确认/退订结果页、安全头（见 §12） |
 | `cleanup.go` | `Cleaner` | 定时清理过期数据库记录与图片（见 §13） |
-| `*_test.go` | — | 单元测试（store/coordinator/http/images/mail/parser/cleanup） |
+| `*_test.go` | — | 单元测试（store/coordinator/http/images/mail/tg_source/cleanup） |
 
 ## 4. 配置项（环境变量）
 
@@ -92,13 +91,14 @@ Terry Alerts 是一个「博主原始发言邮件订阅服务」。核心流水�
 | `CLEANUP_INTERVAL` | `1h` | 清理周期 |
 | `IMAGE_RETENTION` | `168h` | 图片保留时长（7 天） |
 | `DB_RETENTION` | `720h` | 批次/消息等记录保留时长（30 天） |
-| `WS_ENABLED` | `true` | 是否启用上游 WebSocket 监听 |
-| `WS_URL` | （启用时必填） | 上游 WS 地址，必须 ws/wss |
-| `WS_AUTH_TOKEN` | 空 | WS `Authorization: Bearer` 令牌 |
-| `WS_HEADERS_JSON` | `{}` | 额外 WS 请求头（JSON 对象） |
-| `WS_SUBSCRIBE_MESSAGES_JSON` | `[]` | 连接后发送的订阅消息数组（JSON） |
-| `WS_CHANNEL_MAP_JSON` | 两频道同名映射 | 上游频道标识 → 内部 `Channel` 的映射 |
-| `TARGET_AUTHOR_IDS` | 空 | 逗号分隔的目标博主 ID；非空时只处理这些作者 |
+| `TG_ENABLED` | `true` | 是否启用内置 Telegram MTProto 采集器 |
+| `TG_API_ID` | （启用时必填） | my.telegram.org 应用的 API ID |
+| `TG_API_HASH` | （启用时必填） | my.telegram.org 应用的 API Hash |
+| `TG_SESSION` | （启用时必填） | Telethon StringSession（`scripts/gen_session.py` 生成），建议为邮件服务单独生成 |
+| `TG_SESSION_FILE` | `data/service/tg.session` | gotd 刷新后 session 的落盘路径（登录凭证），纳入备份 |
+| `TG_STATE_FILE` | `data/service/tg.updates.json` | 断线补包断点文件（每群 pts 进度），重启后补回空洞消息，纳入备份；禁止多实例共享 |
+| `TG_CHANNEL_MAP_JSON` | 两频道同名映射 | 群聊数字 ID（超级群去掉 `-100`）→ 内部 `Channel` 的映射，未映射的消息丢弃 |
+| `TARGET_AUTHOR_IDS` | 空 | 逗号分隔的目标博主数字 user ID；非空时只处理这些作者 |
 
 ## 5. 核心调度：Coordinator 与批次状态机
 
@@ -149,16 +149,25 @@ SQLite（WAL 模式，`foreign_keys = ON`，`busy_timeout = 5000`，单连接 `S
 - 所有时间戳列为 Unix 毫秒。
 - `Store.now` 可注入时钟用于测试（`newStore(path, now)`），新写时间相关逻辑必须走 `s.now()`，禁止直接调 `time.Now()`（Coordinator/Cleaner 等非 Store 代码除外）。
 
-## 7. 上游接入：GroupSocket 与消息解析
+## 7. 数据源接入：TgSource（内置 MTProto）
 
-- `GroupSocket.Run`：断线后指数退避重连（1s 起步 ×2，30s 封顶）；连接后依次发送 `WS_SUBSCRIBE_MESSAGES_JSON` 中的订阅消息；WS 读限为 `MaxImageBytes * 2`。
-- `NormalizeSocketMessage(payload, channelMap, targetAuthors)`：
-  - 容错解包 `message` / `data.message` / `payload` / `data` 等嵌套层；
-  - 图片字段识别 `images`、`image_urls`、`imageUrls`、`media`、`attachments`、`image`；
-  - 频道经 `WS_CHANNEL_MAP_JSON` 映射，未映射的消息丢弃；
-  - `TARGET_AUTHOR_IDS` 非空时仅放行目标作者；
-  - 时间字段统一解析为 RFC3339。
-- 新增上游字段/格式时：改 `message_parser.go`，补 `message_parser_test.go` 用例，并在此节登记。
+方案 C：把外部 WebSocket 数据源改为服务内置的 Telegram MTProto 采集器（gotd/td）。`main.go` 中 `TgSource` 与旧 `GroupSocket` 使用**同一个消息回调**，聚合之后的流水线完全不变。
+
+- **登录**：`session.TelethonSession(TG_SESSION)` 解码 Telethon StringSession → 存入 `session.StorageMemory`（未配置文件）或 `session.FileStorage`（配置 `TG_SESSION_FILE`）。文件不存在时由字符串初始化，之后 gotd 自行刷新文件内容。`client.Run` 内用 `Auth().Status` 校验已授权，未授权直接报错提示重新生成 session（无交互环境不做验证码登录）。
+- **断线补包（防消息空洞）**：update 不直接交给 `tg.NewUpdateDispatcher`，而是先经 `updates.Manager`（gotd 内建 gap 管理器）：
+  - `updates.NewFileStorage(TG_STATE_FILE)` 持久化每个群的 `pts` 断点，**Storage 与 AccessHasher 必须用同一实例**，否则重启后 channel 的 pts 无法恢复；父目录由 `stateStorage()` 提前创建（0700）。
+  - 恢复的 update 先按 pts 检测空洞，命中则调 `updates.getDifference` / `getChannelDifference` 补齐，再把**实时 + 补包**消息统一喂给 dispatcher → `onMessage`。`Forget=false`（默认）表示从本地断点续传，而非用服务端状态覆盖。
+  - `client.Run` 内授权成功后调用 `gaps.Run(ctx, client.API(), userID, AuthOptions{IsBot:false})`；`IsBot=false` 因为 userbot 依赖频道 difference 能力。
+  - `OnTooLong` / `OnChannelTooLong` 回调仅打告警日志（空洞过大时服务端会截断，无法自动补齐）。补包消息走同一 handler，重复投递由 `store.HasMessage` 去重挡掉。
+  - **部署约束**：`FileStorage` 禁止多进程共享同一文件，本服务按单实例部署（幂等键同样假设单实例）。`TG_STATE_FILE` 与 `TG_SESSION_FILE` 职责不同：前者存消息进度，后者存登录凭证，均需纳入备份。
+- **重连**：`TgSource.Run` 外层退避重启（1s 起步 ×2，30s 封顶）；gotd 客户端内部另有自动重连、心跳、DC 迁移。断线期间的消息由上述 gap 管理器补齐。
+- **消息过滤**（`tgProcessor.onMessage`）：
+  - 只处理 `*tg.Message` 且 `Out == false`（忽略服务消息与自己发的消息）；
+  - `channelOf(peer, TGChannelMap)` 从 `PeerChannel.ChannelID` / `PeerChat.ChatID` 取纯数字 ID 映射频道，未映射丢弃；
+  - `authorOf` 从 `FromID`（`PeerUser`/`PeerChannel`）取作者 ID 与名字，`TARGET_AUTHOR_IDS` 非空时仅放行目标作者；
+  - 无文本无图片的消息丢弃；`IncomingMessage.ID` 为 `<群ID>:<消息ID>`。
+- **图片**（`imagesOf`）：处理 `MessageMediaPhoto` 与 `image/*` 的 `MessageMediaDocument`，`largestPhotoSize` 选最大尺寸，`client.Download(...).Stream` 下载到受限 buffer（`limitedWriter` 按 `MAX_IMAGE_BYTES` 截断），转 base64 交给现有 `ImageStore.Prepare`。下载失败只跳过该图，不阻塞消息。
+- 改动群聊/作者过滤或图片提取时：改 `tg_source.go`，补 `tg_source_test.go`（过滤与尺寸选择均为纯函数，不依赖真实连接），并在此节登记。
 
 ## 8. 图片处理：ImageStore
 
@@ -234,7 +243,7 @@ make release         # 产出 release/terry-alerts-linux-{amd64,arm64}.tar.gz
 - [ ] 增删配置项 / 改默认值 → §4 表格 + `.env.example`
 - [ ] 改批次状态、阈值语义、重试策略 → §5 状态机图与不变量
 - [ ] 改表结构 / SQL → §6 表清单 + 迁移说明
-- [ ] 改 WS 协议、订阅消息、消息解析 → §7
+- [ ] 改 TG 登录、群聊/作者过滤、消息规范化、图片提取 → §7 与 §4 对应项
 - [ ] 改图片限制、格式、SSRF 策略 → §8 与 §4 对应项
 - [ ] 改评分提示词、档位、上下文 → §9
 - [ ] 改邮件模板、头、幂等策略 → §10

@@ -14,7 +14,8 @@ func testConfig(t *testing.T) Config {
 		EmailFrom: "Test <test@example.com>", Window: 120000000000, MaxBatchWait: 900000000000, MaxBatchMessages: 20, ScoreThreshold: 80, Retry: 60000000000, MaxBatchAttempts: 8,
 		MaxImageBytes: 5 * 1024 * 1024, MaxImagePixels: 25000000, MaxImagesPerMessage: 6, MaxScoringImages: 6,
 		ResendRemoteImages: true, CleanupInterval: 3600000000000, ImageRetention: 168 * 36000000000, DatabaseRetention: 720 * 36000000000,
-		WSChannelMap: map[string]Channel{"room-us": ChannelUS, "room-crypto": ChannelCrypto}, TargetAuthorIDs: map[string]bool{"blogger": true}}
+		TGEnabled: false, TGAPIID: 123, TGAPIHash: "hash", TGSessionFile: filepath.Join(directory, "tg.session"),
+		TGStateFile: filepath.Join(directory, "tg.updates.json"), TGChannelMap: map[string]Channel{"room-us": ChannelUS, "room-crypto": ChannelCrypto}, TargetAuthorIDs: map[string]bool{"blogger": true}}
 }
 
 type fakeScorer struct {
