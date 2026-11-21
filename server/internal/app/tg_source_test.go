@@ -13,23 +13,30 @@ import (
 )
 
 func TestChannelOf(t *testing.T) {
-	channelMap := map[string]Channel{"1234567890": ChannelUS, "-1009876543210": ChannelCrypto}
+	channelMap := map[string]Channel{
+		"3989060419_1": ChannelCrypto,
+		"3989060419_2": ChannelUS,
+	}
 	tests := []struct {
 		name   string
 		peer   tg.PeerClass
+		msg    *tg.Message
 		wantID string
 		wantCh Channel
 		wantOK bool
 	}{
-		{"supergroup", &tg.PeerChannel{ChannelID: 1234567890}, "1234567890", ChannelUS, true},
-		{"channel with prefix", &tg.PeerChannel{ChannelID: -1009876543210}, "-1009876543210", ChannelCrypto, true},
-		{"basic group", &tg.PeerChat{ChatID: 1234567890}, "1234567890", ChannelUS, true},
-		{"unmapped", &tg.PeerChannel{ChannelID: 111}, "", "", false},
-		{"user peer", &tg.PeerUser{UserID: 1234567890}, "", "", false},
+		{"topic 1", &tg.PeerChannel{ChannelID: 3989060419}, topicMsg(t, 1, 5001), "3989060419_1", ChannelCrypto, true},
+		{"topic 2", &tg.PeerChannel{ChannelID: 3989060419}, topicMsg(t, 2, 5002), "3989060419_2", ChannelUS, true},
+		{"uses top id priority", &tg.PeerChannel{ChannelID: 3989060419}, topicMsg(t, 1, 5001), "3989060419_1", ChannelCrypto, true},
+		{"unmapped topic", &tg.PeerChannel{ChannelID: 3989060419}, topicMsg(t, 99, 9099), "", "", false},
+		{"no topic", &tg.PeerChannel{ChannelID: 3989060419}, nil, "", "", false},
+		{"unmapped group", &tg.PeerChannel{ChannelID: 111}, topicMsg(t, 1, 1111), "", "", false},
+		{"basic group ignored", &tg.PeerChat{ChatID: 3989060419}, topicMsg(t, 1, 5001), "", "", false},
+		{"user peer ignored", &tg.PeerUser{UserID: 3989060419}, topicMsg(t, 1, 5001), "", "", false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rule, ok := channelOf(tt.peer, channelMap)
+			rule, ok := channelOf(tt.peer, tt.msg, channelMap)
 			if ok != tt.wantOK {
 				t.Fatalf("ok = %v, want %v", ok, tt.wantOK)
 			}
@@ -37,6 +44,27 @@ func TestChannelOf(t *testing.T) {
 				t.Fatalf("rule = %+v, want id=%s channel=%s", rule, tt.wantID, tt.wantCh)
 			}
 		})
+	}
+}
+
+// topicMsg 构造一条位于话题内、且回复了该话题起始消息的消息：
+// reply_to_top_id = 话题 ID，reply_to_msg_id = 被回复的具体消息 ID。
+func topicMsg(t *testing.T, topicID, replyID int) *tg.Message {
+	t.Helper()
+	return &tg.Message{ReplyTo: &tg.MessageReplyHeader{ReplyToTopID: topicID, ReplyToMsgID: replyID}}
+}
+
+func TestTopicIDOf(t *testing.T) {
+	if got := topicIDOf(topicMsg(t, 1, 5001)); got != "1" {
+		t.Fatalf("topic id = %q, want 1", got)
+	}
+	// 只有 reply_to_msg_id（无 top_id）时按 msg_id 兜底。
+	onlyMsg := &tg.Message{ReplyTo: &tg.MessageReplyHeader{ReplyToMsgID: 7}}
+	if got := topicIDOf(onlyMsg); got != "7" {
+		t.Fatalf("fallback topic id = %q, want 7", got)
+	}
+	if got := topicIDOf(&tg.Message{}); got != "" {
+		t.Fatalf("non-topic message should yield empty topic, got %q", got)
 	}
 }
 

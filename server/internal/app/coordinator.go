@@ -97,7 +97,7 @@ func (c *Coordinator) Process(id string) {
 			return
 		}
 		logScore(id, batch.Channel, result)
-		if result.Score <= c.config.ScoreThreshold {
+		if result.Score < c.config.ScoreThreshold {
 			if err := c.store.MarkSkipped(id, result.Score, result.Model); err != nil {
 				log.Printf("更新批次失败：%v", err)
 			}

@@ -6,21 +6,37 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"mime/multipart"
+	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"golang.org/x/net/proxy"
 )
 
-var valueLevels = []string{
-	"闲聊、问候、表情、广告或与美股和加密货币市场无关的内容；没有值得订阅者立即阅读的市场信息。",
-	"提到市场或某个资产，但只有泛泛评论、情绪或已知事实，没有具体观点、数据、交易信息或风险说明。",
-	"包含有一定参考意义的市场背景或方向性看法，但缺少明确标的、价格、时间、依据、仓位或风险边界。",
-	"包含明确标的和较具体的市场观点、数据、依据或风险提示，能帮助订阅者理解一个交易想法，但关键细节仍不完整。",
-	"包含及时且具体的交易或持仓信息，例如明确标的、方向、买卖动作、订单截图、入场或退出区域、仓位或止损；订阅者能直接核对博主正在做什么。",
-	"包含非常及时、清晰且可核对的高价值交易信息：明确标的和方向，并同时给出多项关键细节，例如实际成交或订单截图、价格、仓位、目标、失效条件或风险管理。",
+const jevPurpose = "判断投资博主的发言是否包含值得即时推送的标的趋势、观点或操作信号"
+
+const subscriptionQuestion = "这批消息是否包含值得立即推送给订阅者的具体标的趋势判断、明确看多/看空观点、重点关注提示或交易动作？"
+
+var subscriptionCriteria = []string{
+	"0: 完全无关的日常闲聊、广告、寒暄、表情包或无意义水群内容。",
+	"1: 泛泛的市场新闻转发、宏观闲聊或情绪宣泄，没有具体标的，也没有明确的方向判断。",
+	"2: 提及具体标的或板块，但仅为客观事实/新闻搬运、段子、事后复盘或科普，不含当下投资倾向或关注建议。",
+	"3: 讨论宏观大势、大盘整体看法或宽泛行业现象，有一定参考性，但未落脚到具体标的或明确细分赛道的方向判断。",
+	"4: 针对具体标的或明确细分赛道，给出了清晰的趋势判断、看多/看空倾向、重点关注提示或明确买卖/调仓动作（例如「TSLA 最近走势挺强的，保持关注」「买入TSLA」），即使表述极简且未附带价格、仓位、详细理由或截图，也属于本档。",
+	"5: 针对具体标的给出了明确的操作指令或深度投资判断，且附带了具体的核心依据或可执行信息（如基本面/技术面逻辑、估值分析、入场/离场区间、仓位比例、止损位、订单截图或重大风控预警）。",
+}
+
+type JevMessage struct {
+	Author         string   `json:"author"`
+	SentAt         string   `json:"sent_at"`
+	OriginalText   string   `json:"original_text"`
+	OriginalImages []string `json:"original_images,omitempty"`
 }
 
 type JevScorer struct {
@@ -29,13 +45,36 @@ type JevScorer struct {
 }
 
 func NewJevScorer(config Config) *JevScorer {
-	return &JevScorer{config: config, client: &http.Client{Timeout: 45 * time.Second}}
+	client := &http.Client{Timeout: 45 * time.Second}
+	if config.Proxy != "" {
+		// JEV 走标准 HTTP Client，与 gotd 的 MTProto 共用 PROXY 出口，
+		// 因此这里需要单独把 SOCKS5 拨号器挂到 HTTP Transport 上。
+		// socks5h 由 x/net/proxy 在代理端解析域名，避免本地 DNS 泄漏。
+		proxyURL, err := url.Parse(config.Proxy)
+		if err != nil {
+			log.Printf("JEV 代理地址解析失败，将直连：%v", err)
+		} else if dialer, dialErr := proxy.FromURL(proxyURL, proxy.Direct); dialErr != nil {
+			log.Printf("JEV 代理配置无效，将直连：%v", dialErr)
+		} else {
+			transport := http.DefaultTransport.(*http.Transport).Clone()
+			// 已显式指定 SOCKS 出口，不再叠加 HTTP_PROXY/HTTPS_PROXY 环境变量。
+			transport.Proxy = nil
+			transport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+				if contextDialer, ok := dialer.(proxy.ContextDialer); ok {
+					return contextDialer.DialContext(ctx, network, addr)
+				}
+				return dialer.Dial(network, addr)
+			}
+			client.Transport = transport
+		}
+	}
+	return &JevScorer{config: config, client: client}
 }
 
 func (s *JevScorer) Score(batch *BatchWithMessages) (ScoreResult, error) {
 	var result ScoreResult
 	remainingText, remainingImages := 48000, s.config.MaxScoringImages
-	messages := []map[string]any{}
+	messages := []JevMessage{}
 	assets := map[string]any{}
 	type filePart struct{ name, path string }
 	parts := []filePart{}
@@ -56,13 +95,20 @@ func (s *JevScorer) Score(batch *BatchWithMessages) (ScoreResult, error) {
 			parts = append(parts, filePart{name: part, path: filepath.Join(s.config.ImageDir, stored.FileName)})
 			remainingImages--
 		}
-		messages = append(messages, map[string]any{"author": message.AuthorName, "sent_at": message.SentAt, "original_text": string(text), "original_images": refs})
+		message := JevMessage{Author: message.AuthorName, SentAt: message.SentAt, OriginalText: string(text)}
+		if len(refs) > 0 {
+			message.OriginalImages = refs
+		}
+		messages = append(messages, message)
 	}
 	payload := map[string]any{
-		"model":     s.config.JevModel,
-		"state":     map[string]any{"market": ChannelLabel(batch.Channel), "purpose": "评估博主这组连续原始发言对美股或加密货币订阅者的即时阅读价值，不生成摘要。", "messages": messages},
-		"assets":    assets,
-		"questions": map[string]any{"subscription_value": map[string]any{"type": "score", "instructions": "仅根据 `messages` 中的原始文字和原始截图，评价这组博主发言对关注美股或加密货币交易者的即时订阅价值。", "criteria": valueLevels}},
+		"model": s.config.JevModel,
+		"state": map[string]any{"market": ChannelLabel(batch.Channel), "purpose": jevPurpose, "messages": messages},
+		"questions": map[string]any{"subscription_value": map[string]any{"type": "score", "instructions": subscriptionQuestion, "criteria": subscriptionCriteria}},
+	}
+	// TypeSafe 的 assets 要求至少一项；无图片时必须整个字段缺省，传 {} 会被判为 400 Invalid request。
+	if len(assets) > 0 {
+		payload["assets"] = assets
 	}
 	payloadJSON, _ := json.Marshal(payload)
 	var body bytes.Buffer
@@ -132,5 +178,5 @@ func (s *JevScorer) Score(batch *BatchWithMessages) (ScoreResult, error) {
 	if !ok {
 		return result, fmt.Errorf("JEV 响应缺少 subscription_value")
 	}
-	return ScoreResult{Score: answer.Score / float64(len(valueLevels)-1) * 100, RawScore: answer.Score, Model: decoded.Model, Confidence: answer.Confidence, Probabilities: answer.Probabilities}, nil
+	return ScoreResult{Score: answer.Score / float64(len(subscriptionCriteria)-1) * 100, RawScore: answer.Score, Model: decoded.Model, Confidence: answer.Confidence, Probabilities: answer.Probabilities}, nil
 }

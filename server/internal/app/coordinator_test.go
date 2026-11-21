@@ -42,16 +42,16 @@ func TestStrictThresholdAndChannelRecipients(t *testing.T) {
 		t.Fatal("重复处理或重复评分")
 	}
 }
-func TestExactlyEightyDoesNotSend(t *testing.T) {
-	store, mailer, _, coordinator, id := runCoordinatorCase(t, 80)
+func TestThresholdBoundarySends(t *testing.T) {
+	store, mailer, _, coordinator, id := runCoordinatorCase(t, 75)
 	defer store.Close()
 	defer coordinator.Stop()
-	if len(mailer.alerts) != 0 {
-		t.Fatal("80 分不应发送")
+	if len(mailer.alerts) != 2 {
+		t.Fatalf("75 分应发送，实际收件人 %d 人", len(mailer.alerts))
 	}
 	batch, _ := store.GetBatch(id)
-	if batch.Status != BatchSkipped {
-		t.Fatal("低分批次未跳过")
+	if batch.Status != BatchSent {
+		t.Fatalf("批次状态错误：%s", batch.Status)
 	}
 }
 func TestJevFailureRetriesRatherThanSkipping(t *testing.T) {

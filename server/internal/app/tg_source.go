@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -15,8 +16,10 @@ import (
 
 	"github.com/gotd/td/session"
 	"github.com/gotd/td/telegram"
+	"github.com/gotd/td/telegram/dcs"
 	"github.com/gotd/td/telegram/updates"
 	"github.com/gotd/td/tg"
+	"golang.org/x/net/proxy"
 )
 
 // TgSource 是内置的 Telegram MTProto 采集器。
@@ -109,10 +112,22 @@ func (s *TgSource) connect(ctx context.Context) error {
 		},
 	})
 
-	client := telegram.NewClient(s.config.TGAPIID, s.config.TGAPIHash, telegram.Options{
+	opts := telegram.Options{
 		SessionStorage: storage,
 		UpdateHandler:  gaps,
-	})
+	}
+	// 可选代理：gotd 走原生 MTProto TCP，不读取 HTTP_PROXY 等环境变量。
+	// 部署环境若需经 SOCKS5 代理才能访问 Telegram，用 PROXY 指定，
+	// 例如 socks5://host:port 或 socks5h://host:port（后者走远端 DNS）。
+	// 该出口由 TG 采集与 JEV 评分共用，留空则都直连。
+	if s.config.Proxy != "" {
+		resolver, err := proxyResolver(s.config.Proxy)
+		if err != nil {
+			return err
+		}
+		opts.Resolver = resolver
+	}
+	client := telegram.NewClient(s.config.TGAPIID, s.config.TGAPIHash, opts)
 	processor.client = client
 
 	return client.Run(ctx, func(ctx context.Context) error {
@@ -127,10 +142,8 @@ func (s *TgSource) connect(ctx context.Context) error {
 		// 启动 gap 管理器：Forget=false 表示从本地 state 断点续传（而非用服务端状态覆盖）。
 		// IsBot=false，因为这是 userbot——频道更新依赖它的 channel difference 能力。
 		if err := gaps.Run(ctx, client.API(), status.User.ID, updates.AuthOptions{IsBot: false}); err != nil {
-			return fmt.Errorf("启动 TG 更新断点管理失败：%w", err)
+			return fmt.Errorf("TG 更新断点管理退出：%w", err)
 		}
-		log.Printf("TG 采集器已连接（userbot：%s），断线补包已启用", authUserName(status.User))
-		<-ctx.Done()
 		return ctx.Err()
 	})
 }
@@ -192,7 +205,7 @@ func (p *tgProcessor) onMessage(ctx context.Context, e tg.Entities, message tg.M
 	if !ok || msg.Out {
 		return // 忽略服务消息和自己发出的消息
 	}
-	channel, ok := channelOf(msg.PeerID, p.config().TGChannelMap)
+	channel, ok := channelOf(msg.PeerID, msg, p.config().TGChannelMap)
 	if !ok {
 		return
 	}
@@ -225,21 +238,47 @@ type channelRule struct {
 	channel Channel
 }
 
-func channelOf(peer tg.PeerClass, channelMap map[string]Channel) (channelRule, bool) {
-	var rawID string
-	switch peerType := peer.(type) {
-	case *tg.PeerChannel:
-		rawID = strconv.FormatInt(peerType.ChannelID, 10)
-	case *tg.PeerChat:
-		rawID = strconv.FormatInt(peerType.ChatID, 10)
-	default:
-		return channelRule{}, false
+// topicIDOf 提取消息所属的话题 ID（论坛话题）。Telegram 话题群内，
+// 消息通过 reply_to 携带话题信息：优先 reply_to_top_id（话题起始消息），
+// 其次 reply_to_msg_id。非话题消息返回空字符串。
+// 与 scripts/fetch_tg.py 的 topic_of 保持一致。
+func topicIDOf(msg *tg.Message) string {
+	if msg == nil || msg.ReplyTo == nil {
+		return ""
 	}
-	channel, ok := channelMap[rawID]
+	header, ok := msg.ReplyTo.(*tg.MessageReplyHeader)
+	if !ok {
+		return ""
+	}
+	if header.ReplyToTopID != 0 {
+		return strconv.Itoa(header.ReplyToTopID)
+	}
+	if header.ReplyToMsgID != 0 {
+		return strconv.Itoa(header.ReplyToMsgID)
+	}
+	return ""
+}
+
+// channelOf 用「群号_话题ID」格式的 key 在映射表里查找内部频道。
+// gotd update 里的 PeerChannel.ChannelID 就是群号（如 3989060419），话题 ID 从
+// reply_to 提取；两者拼成 key 直接查表，不做任何前缀或格式转换。
+// 没有话题 ID 或 key 未映射的消息直接丢弃。channelRule.id 用完整 key，
+// 保证不同话题的消息产生不同的幂等 ID。
+func channelOf(peer tg.PeerClass, msg *tg.Message, channelMap map[string]Channel) (channelRule, bool) {
+	peerChannel, ok := peer.(*tg.PeerChannel)
 	if !ok {
 		return channelRule{}, false
 	}
-	return channelRule{id: rawID, channel: channel}, true
+	topic := topicIDOf(msg)
+	if topic == "" {
+		return channelRule{}, false
+	}
+	key := strconv.FormatInt(peerChannel.ChannelID, 10) + "_" + topic
+	channel, ok := channelMap[key]
+	if !ok {
+		return channelRule{}, false
+	}
+	return channelRule{id: key, channel: channel}, true
 }
 
 // authorOf 提取作者的数字 ID 与显示名。频道匿名发帖时 FromID 是 channel。
@@ -386,4 +425,33 @@ func authUserName(user *tg.User) string {
 		return username
 	}
 	return "unknown"
+}
+
+// proxyResolver 把 PROXY（socks5://host:port 或 socks5h://host:port）转成 gotd resolver。
+// socks5h 走远端 DNS 解析，适合国内网络环境。HTTP_PROXY 等环境变量对 gotd 无效，
+// 必须显式配置这里。
+func proxyResolver(raw string) (dcs.Resolver, error) {
+	u, err := url.Parse(raw)
+	if err != nil {
+		return nil, fmt.Errorf("PROXY 格式无效：%w", err)
+	}
+	if u.Scheme != "socks5" && u.Scheme != "socks5h" {
+		return nil, fmt.Errorf("PROXY 仅支持 socks5:// 或 socks5h://，当前为 %q", u.Scheme)
+	}
+	if u.Host == "" {
+		return nil, fmt.Errorf("PROXY 缺少主机地址")
+	}
+	// FromURL 只认 socks5；socks5h 语义相同（远端解析），统一当 socks5 处理。
+	if u.Scheme == "socks5h" {
+		u.Scheme = "socks5"
+	}
+	dialer, err := proxy.FromURL(u, proxy.Direct)
+	if err != nil {
+		return nil, fmt.Errorf("创建 TG 代理失败：%w", err)
+	}
+	ctxDialer, ok := dialer.(proxy.ContextDialer)
+	if !ok {
+		return nil, fmt.Errorf("TG 代理不支持 context dial")
+	}
+	return dcs.Plain(dcs.PlainOptions{Dial: ctxDialer.DialContext}), nil
 }

@@ -46,6 +46,7 @@ type Config struct {
 	TGSession             string
 	TGSessionFile         string
 	TGStateFile           string
+	Proxy                 string
 	TGChannelMap          map[string]Channel
 	TargetAuthorIDs       map[string]bool
 }
@@ -122,7 +123,7 @@ func LoadConfig() Config {
 		Window:           time.Duration(envInt("MESSAGE_WINDOW_MS", 120000)) * time.Millisecond,
 		MaxBatchWait:     time.Duration(envInt("MAX_BATCH_WAIT_MS", 900000)) * time.Millisecond,
 		MaxBatchMessages: envInt("MAX_BATCH_MESSAGES", 20),
-		ScoreThreshold:   envFloat("SCORE_THRESHOLD", 80), Retry: time.Duration(envInt("RETRY_MS", 60000)) * time.Millisecond,
+		ScoreThreshold:   envFloat("SCORE_THRESHOLD", 75), Retry: time.Duration(envInt("RETRY_MS", 60000)) * time.Millisecond,
 		MaxBatchAttempts: envInt("MAX_BATCH_ATTEMPTS", 8), MaxImageBytes: envInt64("MAX_IMAGE_BYTES", 5*1024*1024),
 		MaxImagePixels: envInt("MAX_IMAGE_PIXELS", 25000000), MaxImagesPerMessage: envInt("MAX_IMAGES_PER_MESSAGE", 6),
 		MaxScoringImages: envInt("MAX_SCORING_IMAGES", 6), AllowPrivateImageURLs: envBool("ALLOW_PRIVATE_IMAGE_URLS", false),
@@ -133,6 +134,8 @@ func LoadConfig() Config {
 		TGAPIHash: os.Getenv("TG_API_HASH"), TGSession: os.Getenv("TG_SESSION"),
 		TGSessionFile:   env("TG_SESSION_FILE", "data/service/tg.session"),
 		TGStateFile:     env("TG_STATE_FILE", "data/service/tg.updates.json"),
+		// TG 采集与 JEV 评分共用同一个 SOCKS5 出口，统一由 PROXY 指定。
+		Proxy:           env("PROXY", ""),
 		TGChannelMap:    channels,
 		TargetAuthorIDs: authors,
 	}
@@ -160,6 +163,9 @@ func (c Config) Validate() error {
 			return fmt.Errorf("TG_ENABLED 时必须配置 TG_SESSION_FILE 与 TG_STATE_FILE（断线补包断点）")
 		}
 	}
+	if err := validateSocksProxy("PROXY", c.Proxy); err != nil {
+		return err
+	}
 	if u, err := url.Parse(c.PublicURL); err != nil || (u.Scheme != "http" && u.Scheme != "https") {
 		return fmt.Errorf("PUBLIC_URL 必须是完整 HTTP(S) URL")
 	}
@@ -181,6 +187,17 @@ func (c Config) Validate() error {
 		if !ValidChannel(channel) {
 			return fmt.Errorf("未知频道：%s", channel)
 		}
+	}
+	return nil
+}
+
+func validateSocksProxy(name, raw string) error {
+	if raw == "" {
+		return nil
+	}
+	u, err := url.Parse(raw)
+	if err != nil || u.Host == "" || (u.Scheme != "socks5" && u.Scheme != "socks5h") {
+		return fmt.Errorf("%s 仅支持 socks5:// 或 socks5h://，当前为 %q", name, raw)
 	}
 	return nil
 }
