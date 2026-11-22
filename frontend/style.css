@@ -382,6 +382,8 @@ h1, h2, h3, p, dl, dd { margin: 0; }
 .subscribe-btn:hover { opacity: .88; }
 .subscribe-btn:active { transform: scale(.97); }
 .subscribe-feedback { margin-top: 10px; color: var(--accent-deep) !important; }
+.subscribe-feedback.is-error { color: #b3261e !important; }
+.dark .subscribe-feedback.is-error { color: #ffb4ab !important; }
 #subscribe-card { display: none; }
 .side-panel.is-flash { border-color: var(--accent); }
 

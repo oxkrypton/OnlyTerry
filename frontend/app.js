@@ -4,11 +4,15 @@
       var STORE_KEY = 'tg-archive-lang';
       var THEME_KEY = 'tg-archive-theme';
       var SUB_HIDE_KEY = 'tg-archive-subscribe-dismissed';
+      /* 订阅 API：与服务端 .env 的 PUBLIC_URL 一致，部署改域名时只需改这一行 */
+      var SUBSCRIBE_API = 'https://onlyterry.duckdns.org:8443/api/subscriptions';
+      /* 服务端要求至少一个合法频道；归档站只提供订阅入口，默认订阅全部频道 */
+      var SUBSCRIBE_CHANNELS = ['us_stocks', 'crypto'];
       var PAGE_SIZE = 30;
       var state = {
         cfg: null, data: null, lang: FALLBACK, failed: null,
         session: 'session3', query: '', limit: PAGE_SIZE, sort: 'desc',
-        tlMode: 'month', calMonth: '', calSelected: ''
+        tlMode: 'month', calMonth: '', calSelected: '', subFeedbackKey: ''
       };
       var view = { posts: [], rendered: 0, lastMonth: '' };
       var themeReady = false;
@@ -484,9 +488,11 @@
           dismissed = localStorage.getItem(SUB_HIDE_KEY) === '1';
         } catch (e) { }
         get('subscribe-card').classList.toggle('tg-dismissed', dismissed);
-        /* 提示已弹出时，切换语言要同步换成当前语言的「暂未开放」 */
+        /* 提示已弹出时，切换语言要同步换成当前语言；记住文案 key 而不是写死 */
         var fb = get('subscribe-feedback');
-        if (!fb.classList.contains('tg-is-hidden')) fb.textContent = t('subscribeSoon');
+        if (!fb.classList.contains('tg-is-hidden') && state.subFeedbackKey) {
+          fb.textContent = t(state.subFeedbackKey);
+        }
       }
 
       /* ---------- 关于本站弹窗：文案全走 i18n，切换语言时随 renderChrome 一起刷新 ---------- */
@@ -960,27 +966,59 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
 
-      /* 订阅功能未开放：铃铛 / 卡片 / 表单任一入口都只提示，不记邮箱、不请求服务 */
-      function showSubscribeSoon() {
-        var card = get('subscribe-card');
-        card.classList.remove('tg-dismissed');
-        card.classList.add('is-open');
+      /* 订阅：提交到服务端订阅 API，成功后提示去邮箱确认（服务端要求至少一个频道） */
+      function setSubscribeFeedback(key, isError) {
         var fb = get('subscribe-feedback');
-        fb.textContent = t('subscribeSoon');
+        state.subFeedbackKey = key;
+        fb.textContent = t(key);
+        fb.classList.toggle('is-error', !!isError);
         fb.classList.remove('tg-is-hidden');
+      }
+      function submitSubscribe() {
+        var btn = get('subscribe-btn');
+        var emailEl = get('subscribe-email');
+        var email = (emailEl.value || '').trim();
+        if (!email) {
+          setSubscribeFeedback('subscribeInvalid', true);
+          return;
+        }
+        btn.disabled = true;
+        setSubscribeFeedback('subscribeSending', false);
+        var done = function (key, isError) {
+          btn.disabled = false;
+          setSubscribeFeedback(key, isError);
+          if (!isError) emailEl.value = '';
+        };
+        try {
+          fetch(SUBSCRIBE_API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, channels: SUBSCRIBE_CHANNELS })
+          }).then(function (resp) {
+            if (resp.status === 202) return done('subscribeSent', false);
+            if (resp.status === 429) return done('subscribeBusy', true);
+            if (resp.status === 400) return done('subscribeInvalid', true);
+            return done('subscribeFailed', true);
+          }).catch(function () {
+            done('subscribeFailed', true);
+          });
+        } catch (err) {
+          done('subscribeFailed', true);
+        }
       }
       get('subscribe-form').addEventListener('submit', function (e) {
         e.preventDefault();
-        showSubscribeSoon();
+        submitSubscribe();
       });
       get('subscribe-card').addEventListener('click', function (e) {
         if (e.target.closest && e.target.closest('#subscribeClose')) return;
-        showSubscribeSoon();
+        /* 点击卡片其他区域不再弹「暂未开放」提示，保留表单可交互 */
       });
       get('subscribeBell').addEventListener('click', function () {
-        showSubscribeSoon();
         try { localStorage.removeItem(SUB_HIDE_KEY); } catch (err) { }
         var card = get('subscribe-card');
+        card.classList.remove('tg-dismissed');
+        card.classList.add('is-open');
         stopAnchorScroll();
         card.scrollIntoView({ behavior: 'smooth', block: 'center' });
         card.classList.add('is-flash');

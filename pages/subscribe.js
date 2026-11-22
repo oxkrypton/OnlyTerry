@@ -1,6 +1,6 @@
 // GitHub Pages 前端：把订阅表单提交到小机器的订阅 API。
 // 部署前把下面的地址改成你的服务公网地址（与服务端 .env 的 PUBLIC_URL 一致，且已配置 PAGES_URL 放行本页面来源）。
-const API_BASE = "https://alerts.example.com";
+const API_BASE = "https://onlyterry.duckdns.org:8443";
 
 const form = document.querySelector("#subscription-form");
 const button = document.querySelector("#submit");
