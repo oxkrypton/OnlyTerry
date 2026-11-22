@@ -52855,5 +52855,33 @@
     "reply_to_msg_id": 159098,
     "reply_quote": null,
     "deleted": false
+  },
+  {
+    "id": 159173,
+    "date": "2026-11-22T02:08:19+00:00",
+    "date_local": "2026-11-22T10:08:19+08:00",
+    "month": "2026-11",
+    "sender_id": 626055684,
+    "text": "Oh my god",
+    "media": null,
+    "media_type": "photo",
+    "grouped_id": 14362506397341061,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 159174,
+    "date": "2026-11-22T02:08:20+00:00",
+    "date_local": "2026-11-22T10:08:20+08:00",
+    "month": "2026-11",
+    "sender_id": 626055684,
+    "text": "",
+    "media": null,
+    "media_type": "photo",
+    "grouped_id": 14362506397341061,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
   }
 ]
