@@ -46,7 +46,7 @@ func main() {
 		if message.Text == "" && len(storedImages) == 0 {
 			return nil
 		}
-		_, err = coordinator.Accept(app.StoredMessage{ID: message.ID, Channel: message.Channel, AuthorID: message.AuthorID, AuthorName: message.AuthorName, SentAt: message.SentAt, Text: message.Text, Images: storedImages})
+		_, err = coordinator.Accept(app.StoredMessage{ID: message.ID, Channel: message.Channel, AuthorID: message.AuthorID, AuthorName: message.AuthorName, SentAt: message.SentAt, Text: message.Text, Images: storedImages, Reply: message.Reply})
 		return err
 	})
 	if err := coordinator.Recover(); err != nil {

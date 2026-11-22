@@ -30,6 +30,16 @@ type IncomingImage struct {
 	Alt        string
 }
 
+// ReplyContext 是被回复消息的上下文。MessageID 对应 Telegram 原始消息 ID；
+// Quote 是博主回复时选中的片段（可能为空），Text 是被回复消息的全文。
+type ReplyContext struct {
+	MessageID  string
+	Quote      string
+	Text       string
+	AuthorName string
+	SentAt     string
+}
+
 type IncomingMessage struct {
 	ID         string
 	Channel    Channel
@@ -38,6 +48,7 @@ type IncomingMessage struct {
 	SentAt     string
 	Text       string
 	Images     []IncomingImage
+	Reply      *ReplyContext
 }
 
 type StoredImage struct {
@@ -58,6 +69,7 @@ type StoredMessage struct {
 	SentAt     string
 	Text       string
 	Images     []StoredImage
+	Reply      *ReplyContext
 }
 
 type BatchStatus string

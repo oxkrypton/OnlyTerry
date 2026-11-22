@@ -1,7 +1,9 @@
 package app
 
 import (
+	"database/sql"
 	"fmt"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -164,4 +166,46 @@ func TestSubscriptionBothChannelsAndSignedUnsubscribe(t *testing.T) {
 	if !strings.EqualFold(sub.Email, "Reader@Example.com") {
 		t.Fatal("邮箱存储异常")
 	}
+}
+
+func TestReplyContextRoundTrip(t *testing.T) {
+	now := time.UnixMilli(1000000)
+	store, err := newStore(":memory:", func() time.Time { return now })
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	message := testMessage()
+	message.Reply = &ReplyContext{MessageID: "159094", Quote: "節選", Text: "下一個 QQQ 加倉點位：$600", AuthorName: "Terry", SentAt: "2026-11-21T14:44:19Z"}
+	batch, err := store.AppendMessage(message, testWindow())
+	if err != nil {
+		t.Fatal(err)
+	}
+	loaded, err := store.GetBatchWithMessages(batch.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	reply := loaded.Messages[0].Reply
+	if reply == nil || reply.MessageID != "159094" || reply.Quote != "節選" || reply.Text == "" || reply.AuthorName != "Terry" || reply.SentAt == "" {
+		t.Fatalf("回复上下文存取异常：%+v", reply)
+	}
+}
+
+func TestStoreMigratesOldMessagesTable(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "old.db")
+	db, err := sql.Open("sqlite", path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = db.Exec(`CREATE TABLE messages (id INTEGER PRIMARY KEY AUTOINCREMENT, batch_id TEXT, external_id TEXT, channel TEXT, author_id TEXT, author_name TEXT, sent_at TEXT, text TEXT, created_at INTEGER)`); err != nil {
+		t.Fatal(err)
+	}
+	if err = db.Close(); err != nil {
+		t.Fatal(err)
+	}
+	store, err := NewStore(path)
+	if err != nil {
+		t.Fatalf("旧库迁移失败：%v", err)
+	}
+	defer store.Close()
 }

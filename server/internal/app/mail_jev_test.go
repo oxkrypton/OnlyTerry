@@ -26,6 +26,30 @@ func TestFixedMailEscapesOriginalTextAndUsesCID(t *testing.T) {
 		t.Fatal("固定主题错误")
 	}
 }
+func TestAlertEmailStyleAndReplyContext(t *testing.T) {
+	batch := mailBatch()
+	batch.Messages[0].Reply = &ReplyContext{
+		MessageID: "159094", Quote: "下一個 QQQ 加倉點位：$600 🌝",
+		Text: "下一個 QQQ 加倉點位：$600 🌝", AuthorName: "Terry", SentAt: "2026-11-21T14:44:19Z",
+	}
+	content := RenderAlertEmail(batch, "https://example.com/unsubscribe/signed")
+	if strings.Contains(content.HTML, `>原始发言</div>`) {
+		t.Fatal("页头仍显示「原始发言」")
+	}
+	if strings.Contains(content.HTML, "Terry · 2026-11-16") {
+		t.Fatal("消息行仍显示发言者名字")
+	}
+	if !strings.Contains(content.HTML, "2026-11-16 20:00:00") {
+		t.Fatal("消息时间缺失")
+	}
+	if !strings.Contains(content.HTML, "回复 Terry") || !strings.Contains(content.HTML, "下一個 QQQ 加倉點位") {
+		t.Fatal("被回复消息未展示")
+	}
+	if !strings.Contains(content.Text, "> 回复 Terry · 2026-11-21 22:44:19\n> 下一個 QQQ 加倉點位") {
+		t.Fatal("纯文本版缺少回复上下文")
+	}
+}
+
 func TestResendRemoteCIDAttachmentAvoidsServerUpload(t *testing.T) {
 	var payload map[string]any
 	var idempotency string

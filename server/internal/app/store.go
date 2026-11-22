@@ -66,7 +66,43 @@ func newStore(path string, now func() time.Time) (*Store, error) {
 			return nil, fmt.Errorf("初始化 SQLite：%w", err)
 		}
 	}
+	// 旧库早期没有回复上下文字段，补齐列后再读写，避免升级后丢历史数据。
+	if err := ensureMessageReplyColumns(db); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("迁移消息回复字段：%w", err)
+	}
 	return store, nil
+}
+
+func ensureMessageReplyColumns(db *sql.DB) error {
+	rows, err := db.Query(`PRAGMA table_info(messages)`)
+	if err != nil {
+		return err
+	}
+	existing := map[string]bool{}
+	for rows.Next() {
+		var cid, notNull, pk int
+		var name, columnType string
+		var defaultValue any
+		if err := rows.Scan(&cid, &name, &columnType, &notNull, &defaultValue, &pk); err != nil {
+			rows.Close()
+			return err
+		}
+		existing[name] = true
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return err
+	}
+	for _, column := range []string{"reply_msg_id", "reply_quote", "reply_text", "reply_author", "reply_sent_at"} {
+		if existing[column] {
+			continue
+		}
+		if _, err := db.Exec(`ALTER TABLE messages ADD COLUMN ` + column + ` TEXT NOT NULL DEFAULT ''`); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (s *Store) Close() error     { return s.db.Close() }
@@ -258,7 +294,15 @@ func (s *Store) AppendMessage(message StoredMessage, policy BatchWindow) (*Batch
 	} else if _, err = tx.Exec(`UPDATE batches SET due_at=?,updated_at=?,error=NULL WHERE id=?`, due, now, batchID); err != nil {
 		return nil, err
 	}
-	result, err := tx.Exec(`INSERT INTO messages(batch_id,external_id,channel,author_id,author_name,sent_at,text,created_at) VALUES(?,?,?,?,?,?,?,?)`, batchID, message.ID, message.Channel, message.AuthorID, message.AuthorName, message.SentAt, message.Text, now)
+	var replyID, replyQuote, replyText, replyAuthor, replySentAt string
+	if message.Reply != nil {
+		replyID = message.Reply.MessageID
+		replyQuote = message.Reply.Quote
+		replyText = message.Reply.Text
+		replyAuthor = message.Reply.AuthorName
+		replySentAt = message.Reply.SentAt
+	}
+	result, err := tx.Exec(`INSERT INTO messages(batch_id,external_id,channel,author_id,author_name,sent_at,text,reply_msg_id,reply_quote,reply_text,reply_author,reply_sent_at,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`, batchID, message.ID, message.Channel, message.AuthorID, message.AuthorName, message.SentAt, message.Text, replyID, replyQuote, replyText, replyAuthor, replySentAt, now)
 	if err != nil {
 		return nil, err
 	}
@@ -282,7 +326,7 @@ func (s *Store) GetBatchWithMessages(id string) (*BatchWithMessages, error) {
 	if err != nil || batch == nil {
 		return nil, err
 	}
-	rows, err := s.db.Query(`SELECT id,external_id,channel,author_id,author_name,sent_at,text FROM messages WHERE batch_id=? ORDER BY id`, id)
+	rows, err := s.db.Query(`SELECT id,external_id,channel,author_id,author_name,sent_at,text,reply_msg_id,reply_quote,reply_text,reply_author,reply_sent_at FROM messages WHERE batch_id=? ORDER BY id`, id)
 	if err != nil {
 		return nil, err
 	}
@@ -293,9 +337,13 @@ func (s *Store) GetBatchWithMessages(id string) (*BatchWithMessages, error) {
 	var collected []rowMessage
 	for rows.Next() {
 		var row rowMessage
-		if err = rows.Scan(&row.id, &row.message.ID, &row.message.Channel, &row.message.AuthorID, &row.message.AuthorName, &row.message.SentAt, &row.message.Text); err != nil {
+		var replyID, replyQuote, replyText, replyAuthor, replySentAt string
+		if err = rows.Scan(&row.id, &row.message.ID, &row.message.Channel, &row.message.AuthorID, &row.message.AuthorName, &row.message.SentAt, &row.message.Text, &replyID, &replyQuote, &replyText, &replyAuthor, &replySentAt); err != nil {
 			rows.Close()
 			return nil, err
+		}
+		if replyID != "" {
+			row.message.Reply = &ReplyContext{MessageID: replyID, Quote: replyQuote, Text: replyText, AuthorName: replyAuthor, SentAt: replySentAt}
 		}
 		collected = append(collected, row)
 	}

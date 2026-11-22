@@ -47,11 +47,39 @@ func RenderAlertEmail(batch *BatchWithMessages, unsubscribeURL string) EmailCont
 	var sections, plain strings.Builder
 	for messageIndex, message := range batch.Messages {
 		sections.WriteString(`<section style="padding:20px 0;border-bottom:1px solid #e5e7eb">`)
-		sections.WriteString(`<div style="color:#6b7280;font-size:13px;margin-bottom:10px">` + html.EscapeString(message.AuthorName+" · "+displayTime(message.SentAt)) + `</div>`)
+		sections.WriteString(`<div style="color:#6b7280;font-size:13px;margin-bottom:10px">` + html.EscapeString(displayTime(message.SentAt)) + `</div>`)
+		if reply := message.Reply; reply != nil && reply.MessageID != "" {
+			author := reply.AuthorName
+			if author == "" {
+				author = "群友"
+			}
+			label := "回复 " + author
+			if reply.SentAt != "" {
+				label += " · " + displayTime(reply.SentAt)
+			}
+			quote := reply.Quote
+			if strings.TrimSpace(quote) == "" {
+				quote = reply.Text
+			}
+			if strings.TrimSpace(quote) == "" {
+				quote = "（原消息内容不可用）"
+			}
+			sections.WriteString(`<blockquote style="margin:0 0 12px;padding:8px 12px;border-left:3px solid #d1d5db;background:#f9fafb;color:#4b5563;font-size:14px;line-height:1.65">`)
+			sections.WriteString(`<div style="font-size:12px;color:#6b7280;margin-bottom:4px">` + html.EscapeString(label) + `</div>`)
+			sections.WriteString(`<div style="white-space:pre-wrap;overflow-wrap:anywhere">` + html.EscapeString(quote) + `</div>`)
+			if quote != reply.Text && strings.TrimSpace(reply.Text) != "" {
+				sections.WriteString(`<div style="margin-top:6px;font-size:12px;color:#9ca3af;white-space:pre-wrap;overflow-wrap:anywhere">原文：` + html.EscapeString(reply.Text) + `</div>`)
+			}
+			sections.WriteString(`</blockquote>`)
+			plain.WriteString("> " + label + "\n> " + quote + "\n")
+			if quote != reply.Text && strings.TrimSpace(reply.Text) != "" {
+				plain.WriteString("> 原文：" + reply.Text + "\n")
+			}
+		}
 		if message.Text != "" {
 			sections.WriteString(`<div style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:16px;line-height:1.75;color:#111827">` + html.EscapeString(message.Text) + `</div>`)
 		}
-		plain.WriteString(message.AuthorName + " · " + displayTime(message.SentAt) + "\n" + message.Text + "\n")
+		plain.WriteString(displayTime(message.SentAt) + "\n" + message.Text + "\n")
 		for imageIndex, stored := range message.Images {
 			sections.WriteString(fmt.Sprintf(`<div style="margin:12px 0"><img src="cid:%s" alt="%s" width="%d" height="%d" style="display:block;max-width:100%%;height:auto;border-radius:6px;border:1px solid #e5e7eb"></div>`, imageCID(batch.ID, messageIndex, imageIndex), html.EscapeString(stored.Alt), stored.Width, stored.Height))
 			plain.WriteString(fmt.Sprintf("[原图 %d，见邮件内嵌图片]\n", imageIndex+1))
@@ -60,7 +88,7 @@ func RenderAlertEmail(batch *BatchWithMessages, unsubscribeURL string) EmailCont
 		plain.WriteString("\n────────────\n\n")
 	}
 	subject := "【" + ChannelLabel(batch.Channel) + "】" + author + " 新发言提醒"
-	body := `<!doctype html><html lang="zh-CN"><body style="margin:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"><div style="max-width:680px;margin:0 auto;padding:28px 16px"><main style="background:#fff;border-radius:12px;padding:8px 28px"><header style="padding:20px 0;border-bottom:2px solid #111827"><strong style="font-size:20px">` + html.EscapeString(author+" · "+ChannelLabel(batch.Channel)) + `</strong><div style="font-size:13px;color:#6b7280;margin-top:6px">原始发言</div></header>` + sections.String() + `</main><footer style="text-align:center;color:#6b7280;font-size:12px;line-height:1.7;padding:20px">本邮件仅转发博主原始发言，不构成投资建议。<br><a href="` + html.EscapeString(unsubscribeURL) + `" style="color:#4b5563">退订全部频道</a></footer></div></body></html>`
+	body := `<!doctype html><html lang="zh-CN"><body style="margin:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"><div style="max-width:680px;margin:0 auto;padding:28px 16px"><main style="background:#fff;border-radius:12px;padding:8px 28px"><header style="padding:20px 0;border-bottom:2px solid #111827"><strong style="font-size:20px">` + html.EscapeString(author+" · "+ChannelLabel(batch.Channel)) + `</strong></header>` + sections.String() + `</main><footer style="text-align:center;color:#6b7280;font-size:12px;line-height:1.7;padding:20px">本邮件仅转发博主原始发言，不构成投资建议。<br><a href="` + html.EscapeString(unsubscribeURL) + `" style="color:#4b5563">退订全部频道</a></footer></div></body></html>`
 	return EmailContent{Subject: subject, HTML: body, Text: author + " · " + ChannelLabel(batch.Channel) + "\n\n" + plain.String() + "\n本邮件仅转发博主原始发言，不构成投资建议。\n退订全部频道：" + unsubscribeURL}
 }
 

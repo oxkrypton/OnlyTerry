@@ -218,6 +218,12 @@ func (p *tgProcessor) onMessage(ctx context.Context, e tg.Entities, message tg.M
 	if strings.TrimSpace(text) == "" && len(images) == 0 {
 		return
 	}
+	var reply *ReplyContext
+	if msg.ReplyTo != nil {
+		if replyID, quote := replyMetaOf(msg.ReplyTo); replyID > 0 {
+			reply = p.replyOf(ctx, e, msg, replyID, quote)
+		}
+	}
 	incoming := IncomingMessage{
 		ID:         channel.id + ":" + strconv.Itoa(msg.ID),
 		Channel:    channel.channel,
@@ -226,10 +232,74 @@ func (p *tgProcessor) onMessage(ctx context.Context, e tg.Entities, message tg.M
 		SentAt:     time.Unix(int64(msg.Date), 0).UTC().Format(time.RFC3339),
 		Text:       text,
 		Images:     images,
+		Reply:      reply,
 	}
 	if err := p.source.handler(incoming); err != nil {
 		log.Printf("处理 TG 消息失败：%v", err)
 	}
+}
+
+// replyMetaOf 提取被回复消息 ID 与博主选中的引用片段。话题内直接发在话题里的
+// 消息 reply_to_msg_id 指向话题根消息，不带引用时只是话题归属，不算回复。
+func replyMetaOf(header tg.MessageReplyHeaderClass) (int, string) {
+	typed, ok := header.(*tg.MessageReplyHeader)
+	if !ok || typed == nil {
+		return 0, ""
+	}
+	id, _ := typed.GetReplyToMsgID()
+	quote, _ := typed.GetQuoteText()
+	topID, _ := typed.GetReplyToTopID()
+	if topID != 0 && id == topID && strings.TrimSpace(quote) == "" {
+		return 0, ""
+	}
+	return id, quote
+}
+
+// replyOf 取回被回复消息的上下文。取回失败时保留 ID 与引用片段，
+// 邮件里仍会显示「回复某人」，不会因为这条例外丢掉整条博主发言。
+func (p *tgProcessor) replyOf(ctx context.Context, e tg.Entities, msg *tg.Message, replyID int, quote string) *ReplyContext {
+	reply := &ReplyContext{MessageID: strconv.Itoa(replyID), Quote: quote}
+	peer, ok := msg.PeerID.(*tg.PeerChannel)
+	if !ok {
+		return reply
+	}
+	channel := e.Channels[peer.ChannelID]
+	if channel == nil {
+		log.Printf("TG 回复上下文缺少频道实体：%d", peer.ChannelID)
+		return reply
+	}
+	result, err := p.client.API().ChannelsGetMessages(ctx, &tg.ChannelsGetMessagesRequest{
+		Channel: &tg.InputChannel{ChannelID: channel.ID, AccessHash: channel.AccessHash},
+		ID:      []tg.InputMessageClass{&tg.InputMessageID{ID: replyID}},
+	})
+	if err != nil {
+		log.Printf("TG 回复上下文获取失败：%v", err)
+		return reply
+	}
+	var messages []tg.MessageClass
+	switch typed := result.(type) {
+	case *tg.MessagesMessages:
+		messages = typed.Messages
+	case *tg.MessagesMessagesSlice:
+		messages = typed.Messages
+	case *tg.MessagesChannelMessages:
+		messages = typed.Messages
+	}
+	if len(messages) == 0 {
+		return reply
+	}
+	original, ok := messages[0].(*tg.Message)
+	if !ok {
+		return reply
+	}
+	reply.Text = original.Message
+	reply.SentAt = time.Unix(int64(original.Date), 0).UTC().Format(time.RFC3339)
+	authorID, authorName := authorOf(original, e)
+	if authorID == "" || authorName == authorID || !p.config().TargetAuthorIDs[authorID] {
+		authorName = "群友"
+	}
+	reply.AuthorName = authorName
+	return reply
 }
 
 // channelRule 描述一个目标群聊到内部频道的映射。

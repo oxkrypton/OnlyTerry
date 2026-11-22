@@ -68,6 +68,27 @@ func TestTopicIDOf(t *testing.T) {
 	}
 }
 
+func TestReplyMetaOf(t *testing.T) {
+	header := &tg.MessageReplyHeader{}
+	header.SetReplyToMsgID(159094)
+	header.SetReplyToTopID(1)
+	if id, quote := replyMetaOf(header); id != 159094 || quote != "" {
+		t.Fatalf("回复元数据错误：id=%d quote=%q", id, quote)
+	}
+	header.SetQuoteText("節選片段")
+	if id, quote := replyMetaOf(header); id != 159094 || quote != "節選片段" {
+		t.Fatalf("引用片段丢失：id=%d quote=%q", id, quote)
+	}
+
+	// 只指向话题根消息、没有引用片段的消息不算回复。
+	root := &tg.MessageReplyHeader{}
+	root.SetReplyToMsgID(1)
+	root.SetReplyToTopID(1)
+	if id, _ := replyMetaOf(root); id != 0 {
+		t.Fatalf("话题根消息被误判为回复：id=%d", id)
+	}
+}
+
 func TestAuthorOf(t *testing.T) {
 	user := &tg.User{}
 	user.SetFirstName("Terry")
