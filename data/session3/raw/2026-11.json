@@ -53499,5 +53499,61 @@
     "reply_to_msg_id": null,
     "reply_quote": null,
     "deleted": false
+  },
+  {
+    "id": 159836,
+    "date": "2026-11-22T18:17:42+00:00",
+    "date_local": "2026-11-23T02:17:42+08:00",
+    "month": "2026-11",
+    "sender_id": 589159139,
+    "text": "會跌到你懷疑人生 每天都很痛苦的掙扎 SOXL能從最高點300 一直幹到剩5-10% 那就是15-30 那東西ㄧ跌起來沒得救",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": 159184,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 159865,
+    "date": "2026-11-22T20:19:10+00:00",
+    "date_local": "2026-11-23T04:19:10+08:00",
+    "month": "2026-11",
+    "sender_id": 6777107888,
+    "text": "你要看那一隻etf有沒有匯率對沖避險，不然沒有意義，你現在買就等於是拿當今匯率的台幣購買美元資產。 一樣日後美股上漲美元走弱，你的標的上漲也會被匯差吃掉一些。",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": 159585,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 159866,
+    "date": "2026-11-22T20:22:18+00:00",
+    "date_local": "2026-11-23T04:22:18+08:00",
+    "month": "2026-11",
+    "sender_id": 6777107888,
+    "text": "所以你直接買qqq，真的就還不如直接買qqq ，管理費低，而且你是已經換了美金，用美金買美元資產，匯率已經在你換美金那一刻就是那樣的匯率了。",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 159870,
+    "date": "2026-11-22T20:53:58+00:00",
+    "date_local": "2026-11-23T04:53:58+08:00",
+    "month": "2026-11",
+    "sender_id": 9010739659,
+    "text": "人生什麼大場面沒見過？\n\n不貸款，不融資，不槓桿，心平氣和，耐心等待風暴結束。\n\n美國大批餓死人的情況已經是100年前了\n\n反正死不了，只是財產少了。人照樣活著。",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
   }
 ]
