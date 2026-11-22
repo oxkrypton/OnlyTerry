@@ -1,0 +1,9 @@
+.env
+.env.*
+data/
+bin/
+release/
+deploy/
+scripts/
+*.md
+Makefile

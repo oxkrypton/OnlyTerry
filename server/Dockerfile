@@ -1,5 +1,5 @@
 # 构建上下文 = server/ 目录（不是仓库根目录）
-#   cd server && docker build -t tg-service:latest .
+#   cd server && docker build -t my-service:latest .
 FROM golang:1.26-alpine AS builder
 
 WORKDIR /src
