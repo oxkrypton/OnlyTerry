@@ -89,6 +89,18 @@ func TestReplyMetaOf(t *testing.T) {
 	}
 }
 
+func TestReplyAuthorName(t *testing.T) {
+	if got := replyAuthorName(true, "1801190829", "1801190829", "kiko_kry"); got != "kiko_kry" {
+		t.Fatalf("博主自己的旧消息应显示博主名，got %q", got)
+	}
+	if got := replyAuthorName(false, "1801190829", "1801190829", "kiko_kry"); got != "群友" {
+		t.Fatalf("无实体群友应显示群友，got %q", got)
+	}
+	if got := replyAuthorName(false, "Alice", "42", "kiko_kry"); got != "Alice" {
+		t.Fatalf("群友有实体时应显示用户名，got %q", got)
+	}
+}
+
 func TestAuthorOf(t *testing.T) {
 	user := &tg.User{}
 	user.SetFirstName("Terry")

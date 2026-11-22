@@ -221,7 +221,7 @@ func (p *tgProcessor) onMessage(ctx context.Context, e tg.Entities, message tg.M
 	var reply *ReplyContext
 	if msg.ReplyTo != nil {
 		if replyID, quote := replyMetaOf(msg.ReplyTo); replyID > 0 {
-			reply = p.replyOf(ctx, e, msg, replyID, quote)
+			reply = p.replyOf(ctx, e, msg, replyID, quote, authorName)
 		}
 	}
 	incoming := IncomingMessage{
@@ -257,7 +257,7 @@ func replyMetaOf(header tg.MessageReplyHeaderClass) (int, string) {
 
 // replyOf 取回被回复消息的上下文。取回失败时保留 ID 与引用片段，
 // 邮件里仍会显示「回复某人」，不会因为这条例外丢掉整条博主发言。
-func (p *tgProcessor) replyOf(ctx context.Context, e tg.Entities, msg *tg.Message, replyID int, quote string) *ReplyContext {
+func (p *tgProcessor) replyOf(ctx context.Context, e tg.Entities, msg *tg.Message, replyID int, quote, bloggerName string) *ReplyContext {
 	reply := &ReplyContext{MessageID: strconv.Itoa(replyID), Quote: quote}
 	peer, ok := msg.PeerID.(*tg.PeerChannel)
 	if !ok {
@@ -295,11 +295,21 @@ func (p *tgProcessor) replyOf(ctx context.Context, e tg.Entities, msg *tg.Messag
 	reply.Text = original.Message
 	reply.SentAt = time.Unix(int64(original.Date), 0).UTC().Format(time.RFC3339)
 	authorID, authorName := authorOf(original, e)
-	if authorID == "" || authorName == authorID || !p.config().TargetAuthorIDs[authorID] {
-		authorName = "群友"
-	}
-	reply.AuthorName = authorName
+	reply.AuthorName = replyAuthorName(authorID != "" && p.config().TargetAuthorIDs[authorID], authorName, authorID, bloggerName)
 	return reply
+}
+
+// replyAuthorName 决定引用块里显示谁。被回复的可能是群友，也可能是博主自己：
+// 前者取得到用户名就显示名字，否则统一显示「群友」；后者始终用当前博主名，
+// 因为原始消息的 user 实体不一定随当前更新一起返回。
+func replyAuthorName(isTarget bool, resolvedName, authorID, bloggerName string) string {
+	if isTarget && bloggerName != "" {
+		return bloggerName
+	}
+	if resolvedName == "" || resolvedName == authorID {
+		return "群友"
+	}
+	return resolvedName
 }
 
 // channelRule 描述一个目标群聊到内部频道的映射。
