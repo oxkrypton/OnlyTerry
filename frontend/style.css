@@ -514,6 +514,8 @@ button.tg-cal-cell:hover { background: var(--surface-hover); }
   .stat-item dt { font-size: 12px; }
   .stat-item dd { font-size: 21px; }
   .site-layout { margin-top: 20px; }
+  /* 移动端把订阅卡片放到频道列表上方，避免无限加载把它顶到页面底部 */
+  #subscribe-card.is-open { order: -1; margin: 0 0 20px; }
   .archive-search { height: 50px; }
   .search-input { font-size: 16px; }
   .feed-meta { margin-top: 16px; }
