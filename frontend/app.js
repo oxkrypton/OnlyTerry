@@ -4,8 +4,17 @@
       var STORE_KEY = 'tg-archive-lang';
       var THEME_KEY = 'tg-archive-theme';
       var SUB_HIDE_KEY = 'tg-archive-subscribe-dismissed';
+      /* 铃铛提示小点的「已读」状态存在 sessionStorage：标签页关掉即清空，下次打开又出现。
+         纯前端，无服务端 session / token / 用户身份。 */
+      var BELL_DOT_KEY = 'tg-archive-bell-seen';
+      function bellSeen() {
+        try { return sessionStorage.getItem(BELL_DOT_KEY) === '1'; } catch (e) { return false; }
+      }
+      function markBellSeen() {
+        try { sessionStorage.setItem(BELL_DOT_KEY, '1'); } catch (e) { }
+      }
       /* 订阅 API：与服务端 .env 的 PUBLIC_URL 一致，部署改域名时只需改这一行 */
-      var SUBSCRIBE_API = 'https://onlyterry.duckdns.org:8443/api/subscriptions';
+      var SUBSCRIBE_API = 'https://api.terry.ronyu.me:8443/api/subscriptions';
       /* 服务端要求至少一个合法频道；归档站只提供订阅入口，默认订阅全部频道 */
       var SUBSCRIBE_CHANNELS = ['us_stocks', 'crypto'];
       var PAGE_SIZE = 30;
@@ -903,6 +912,7 @@
       });
 
       get('subscribeBell').innerHTML = iconSvg('bell');
+      get('subscribeBell').classList.toggle('has-dot', !bellSeen());
       get('aboutBtn').innerHTML = iconSvg('info');
       get('subscribeClose').innerHTML = iconSvg('x');
       get('aboutClose').innerHTML = iconSvg('x');
@@ -1015,6 +1025,9 @@
         /* 点击卡片其他区域不再弹「暂未开放」提示，保留表单可交互 */
       });
       get('subscribeBell').addEventListener('click', function () {
+        /* 已读即销点：无论哪种存储方案，点击后当前页面立刻消失 */
+        markBellSeen();
+        get('subscribeBell').classList.remove('has-dot');
         try { localStorage.removeItem(SUB_HIDE_KEY); } catch (err) { }
         var card = get('subscribe-card');
         card.classList.remove('tg-dismissed');
