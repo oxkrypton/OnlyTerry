@@ -10,6 +10,8 @@ permissions:
   contents: write
   pages: write
   id-token: write
+  # 用于等待 artifact 可查（下面 Wait for Pages artifact 步骤）
+  actions: read
 
 concurrency:
   group: tg-sync-and-pages
@@ -96,6 +98,8 @@ jobs:
             echo "全群无新消息，跳过提交与重新部署"
           else
             git commit -m "chore(data): sync telegram raw [skip ci]"
+            # 本地 push 可能抢先推进 main（如 11-23 那次 rejected），先变基再推
+            git pull --rebase origin main
             git push
             echo "has_changes=true" >> "$GITHUB_OUTPUT"
           fi
@@ -106,6 +110,26 @@ jobs:
         uses: actions/upload-pages-artifact@v4
         with:
           path: dist
+
+      # deploy-pages@v4 只查一次 artifact 列表且没有重试：实测 upload 成功后
+      # 0.3~0.5s 内查询仍可能返回 0 个，导致部署随机失败（Found 0 artifact(s)）。
+      # 这里轮询到 REST API 真正可见再放行，彻底消除这个竞态。
+      - name: Wait for Pages artifact
+        if: steps.git_check.outputs.has_changes == 'true' || github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for i in $(seq 1 30); do
+            if gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts" \
+                --jq '.artifacts[]?.name' | grep -qx 'github-pages'; then
+              echo "github-pages artifact is visible"
+              exit 0
+            fi
+            echo "artifact not visible yet ($i/30), retry in 2s"
+            sleep 2
+          done
+          echo "::error::github-pages artifact did not become visible in time"
+          exit 1
 
       - name: Deploy to GitHub Pages
         if: steps.git_check.outputs.has_changes == 'true' || github.event_name == 'workflow_dispatch'
