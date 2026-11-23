@@ -4,9 +4,8 @@
       var STORE_KEY = 'tg-archive-lang';
       var THEME_KEY = 'tg-archive-theme';
       var SUB_HIDE_KEY = 'tg-archive-subscribe-dismissed';
-      /* 订阅 API：暂时没有监控正式群聊，先停掉外部请求，避免写入脏数据
+      /* 订阅 API：与服务端 .env 的 PUBLIC_URL 一致，部署改域名时只需改这一行 */
       var SUBSCRIBE_API = 'https://onlyterry.duckdns.org:8443/api/subscriptions';
-      */
       /* 服务端要求至少一个合法频道；归档站只提供订阅入口，默认订阅全部频道 */
       var SUBSCRIBE_CHANNELS = ['us_stocks', 'crypto'];
       var PAGE_SIZE = 30;
@@ -983,7 +982,6 @@
           setSubscribeFeedback('subscribeInvalid', true);
           return;
         }
-        /* 暂时没有监控正式群聊，停用外部订阅请求，避免写入脏数据
         btn.disabled = true;
         setSubscribeFeedback('subscribeSending', false);
         var done = function (key, isError) {
@@ -1007,8 +1005,6 @@
         } catch (err) {
           done('subscribeFailed', true);
         }
-        */
-        setSubscribeFeedback('subscribeSoon', true);
       }
       get('subscribe-form').addEventListener('submit', function (e) {
         e.preventDefault();

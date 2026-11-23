@@ -17,13 +17,14 @@ IMAGE_REPO := $(firstword $(subst :, ,$(IMAGE)))
 TARGET_PLATFORM ?= linux/amd64
 DEPLOY_TAG := $(shell git rev-parse --short HEAD 2>/dev/null || echo dev)-$(shell date +%Y%m%d-%H%M%S)
 HEALTHCHECK_URL ?= http://127.0.0.1:3000/healthz
+LOG_ARGS ?=
 
 # 这些变量可能只在 .env 里定义，需显式导出给 db-sync.sh
 export REMOTE_STOP REMOTE_START PULL_MODE
 
 .DEFAULT_GOAL := test
 
-.PHONY: help test build linux-amd64 linux-arm64 release clean db-pull db-push deploy-image deploy-env deploy-recreate
+.PHONY: help test build linux-amd64 linux-arm64 release clean db-pull db-push deploy-image deploy-env deploy-recreate logs
 
 help:
 	@echo "make test             运行 Go 测试（默认）"
@@ -36,6 +37,7 @@ help:
 	@echo "make deploy-image     构建远端架构镜像→推送→重建→健康检查（改代码后）"
 	@echo "make deploy-env       scp 本地 .env → 备份远端旧 .env → 重建容器（改配置后）"
 	@echo "make deploy-recreate  只重建容器（远端 .env 已手工改好时）"
+	@echo "make logs            实时跟随远端日志（LOG_ARGS='--since 1h --grep jev_scored'）"
 	@echo "远程参数：REMOTE_SSH / REMOTE_DEPLOY / REMOTE_DIR / SERVICE / IMAGE"
 	@echo "构建参数：TARGET_PLATFORM / DEPLOY_TAG / HEALTHCHECK_URL；SKIP_TEST=1 可跳过测试"
 	@echo "本机真实值写在 .env（已 gitignore），可复制到另一台机器"
@@ -99,3 +101,7 @@ deploy-env:
 # 仅重建容器（远端 .env 已手工改好时）：restart 不会重新注入环境变量，必须 force-recreate
 deploy-recreate:
 	ssh $(REMOTE_SSH) "cd $(REMOTE_DEPLOY) && docker compose up -d --force-recreate $(SERVICE)"
+
+# 实时跟随远端服务日志；参数透传给 scripts/logs.sh
+logs:
+	bash scripts/logs.sh $(LOG_ARGS)
