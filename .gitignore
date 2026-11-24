@@ -19,3 +19,4 @@ data/service/
 .agents/
 .claude/
 server/data/service/
+server/docs
