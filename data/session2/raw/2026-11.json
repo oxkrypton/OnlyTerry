@@ -2115,5 +2115,61 @@
     "reply_to_msg_id": 160070,
     "reply_quote": null,
     "deleted": false
+  },
+  {
+    "id": 160854,
+    "date": "2026-11-24T09:11:52+00:00",
+    "date_local": "2026-11-24T17:11:52+08:00",
+    "month": "2026-11",
+    "sender_id": 8500566474,
+    "text": "🔴 11/24 加密每日摘要｜ETF撤資未歇\n\n今天盤面還是偏冷，BTC、ETH同步走弱；比較有進度的，是幣安追贓與以太坊安全工程。價格採11月24日09:00:03 UTC快照，ETF數據為11月23日交易日。\n\n-2.00%｜$BTC 報60,177.96美元。Farside顯示，美國現貨比特幣ETF前一交易日淨流出5.697億美元，其中IBIT流出5.093億美元。這筆撤資，讓「機構回來接盤」的說法暫時少了支撐。\n\n-1.82%｜$ETH 報1,690.70美元。同日現貨以太幣ETF淨流出8,490萬美元，ETHA流出9,050萬美元，FETH則流入560萬美元。兩類ETF合計淨流出6.546億美元，資金面還沒暖起來。\n\n📜 CFTC釐清加密資產怎麼算進機構財務資源。11月23日的工作人員指引指出，以指定合約市場為例，BTC、ETH計入時至少折減20%，合資格支付型穩定幣折減2%，另有流動性限制。我的解讀：制度細節更清楚了，但不能直接把這份指引算成新增買盤。\n\n🚨 幣安追贓往前一步。美國司法部11月23日對涉及10月駭客案的逾11億美元USDC提起民事沒收訴訟，這批資產先前已受限制令約束。官方稱，美方協助凍結、扣押及／或返還的相關資產接近30億美元；這個合計數包含不同狀態，不能全當成已經交還，也不能再把本次訴訟金額直接加上去。\n\n🛠️ 以太坊把安全放到最前面。基金會表示，協議安全團隊規模已加倍，正在推進因應AI與量子運算風險的改造，範圍包括驗證者、錢包帳戶與blob。部分原訂功能得讓路，目前仍在早期規格與開發網路階段，後續會牽動錢包、多簽及質押服務的工程安排。\n\n👀 今天的重點：ETF撤資影響眼前買盤，追贓與安全工程則影響信任怎麼補回來。兩邊都有具體數字，但市場消化它們的速度，恐怕差很多。\n\nhttps://www.alphalab.site/2026-11-24-daily-crypto-digest",
+    "media": null,
+    "media_type": "photo",
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 160855,
+    "date": "2026-11-24T09:12:51+00:00",
+    "date_local": "2026-11-24T17:12:51+08:00",
+    "month": "2026-11",
+    "sender_id": 5678341267,
+    "text": "Alphalab x OKX 活動反饋，填寫學習問卷與 OKX uid 即可抽活動周邊～\n如果你有興趣或填寫完成，可以在這篇訊息按愛心 ❤️\nhttps://forms.gle/UBFBy7eMY3bPpic36",
+    "media": null,
+    "media_type": "photo",
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 160858,
+    "date": "2026-11-24T09:16:15+00:00",
+    "date_local": "2026-11-24T17:16:15+08:00",
+    "month": "2026-11",
+    "sender_id": 5678341267,
+    "text": "Yo 🙂今天晚上 AlphaLab & OKX 有安排課程，入口在這邊～\n\n• Terry & OKX 邀請碼：https://hackbear.tv/okx\n• AlphaLab & OKX Line：https://reurl.cc/6X84XZ",
+    "media": null,
+    "media_type": "photo",
+    "grouped_id": null,
+    "reply_to_msg_id": 160855,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 160861,
+    "date": "2026-11-24T09:22:36+00:00",
+    "date_local": "2026-11-24T17:22:36+08:00",
+    "month": "2026-11",
+    "sender_id": 5678341267,
+    "text": "AlphaLab × Pionex 於今天晚上 20:00~21:00 直播活動，主題如下：\n• 掃盤分析\n• QA問答\n\nAlphaLab × Pionex：\nhttps://hackbear.tv/pionex\n\nAlphaLab Pionex LINE ：\nhttps://reurl.cc/5X5Ldq",
+    "media": null,
+    "media_type": "photo",
+    "grouped_id": null,
+    "reply_to_msg_id": 160381,
+    "reply_quote": null,
+    "deleted": false
   }
 ]
