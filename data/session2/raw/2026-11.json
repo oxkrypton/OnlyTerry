@@ -2087,5 +2087,33 @@
     "reply_to_msg_id": null,
     "reply_quote": null,
     "deleted": false
+  },
+  {
+    "id": 160719,
+    "date": "2026-11-23T18:43:38+00:00",
+    "date_local": "2026-11-24T02:43:38+08:00",
+    "month": "2026-11",
+    "sender_id": 1801190829,
+    "text": "etherfi 黑五刷卡活動正式開始！這次確認所有人都可以拿 $50 USD，沒有地域限制！",
+    "media": "data/session2/media/160719.jpg",
+    "media_type": "photo",
+    "grouped_id": null,
+    "reply_to_msg_id": 158414,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 160741,
+    "date": "2026-11-24T00:14:16+00:00",
+    "date_local": "2026-11-24T08:14:16+08:00",
+    "month": "2026-11",
+    "sender_id": 1706627550,
+    "text": "ok",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": 160070,
+    "reply_quote": null,
+    "deleted": false
   }
 ]
