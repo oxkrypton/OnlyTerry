@@ -5,25 +5,31 @@ on:
     # 每小时 19、49 分各一次；cron 按 UTC 计算，UTC+8 整点偏移不改变分钟数
     - cron: '19,49 * * * *'
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+      - 'scripts/build_view.py'
+      - 'data/**'
 
 permissions:
-  contents: write
-  pages: write
-  id-token: write
-  # 用于等待 artifact 可查（下面 Wait for Pages artifact 步骤）
-  actions: read
-
-concurrency:
-  group: tg-sync-and-pages
-  cancel-in-progress: false
+  contents: read
 
 jobs:
-  sync_and_deploy:
+  # ---- 1. 事实源同步：仅定时或手动触发，本地 push 自动跳过 ----
+  sync:
+    if: github.event_name != 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: write
+    concurrency:
+      group: tg-sync
+      cancel-in-progress: false
+    outputs:
+      has_changes: ${{ steps.git_check.outputs.has_changes }}
+      commit_sha: ${{ steps.git_check.outputs.commit_sha }}
     # 两个话题共用同一账号凭证；WAIT_TIME 不注入（脚本无空串兜底，保持默认 1）
     env:
       TG_API_ID: ${{ secrets.TG_API_ID }}
@@ -37,10 +43,12 @@ jobs:
       REFRESH_RECENT: "200"
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
+        with:
+          ref: main
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.11"
           cache: "pip"
@@ -48,10 +56,6 @@ jobs:
       - name: Install deps
         run: pip install -r requirements.txt
 
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-
-      # ---- 1. 事实源：每个话题一个 session、各自独立游标，CI 只做增量 ----
       # GITHUB_ACTIONS=true 时 fetch_tg.py 跳过 .env，脚本读取的配置只能在此注入。
       # 话题2 的首次全量在本地完成（生成 data/session2/ 并提交），CI 只拉游标之后的新消息。
       # 串行执行，避免同一 StringSession 并发连接；补图逻辑会顺带补齐历史里目标用户缺的图。
@@ -65,27 +69,11 @@ jobs:
           TARGET_TOPIC: "3"
         run: python scripts/fetch_tg.py
 
-      # ---- 2. 展示投影：从 raw 重算，改规则不用重抓 ----
-      # i18n.json 只翻译界面文案；消息正文与回复上下文保持 Telegram 原文。
-      # 语言包会在此步骤做三语键一致性校验，并随产物复制到 dist/。
-      # 站点名可按语言覆盖；未配置的 Secret 为空串，脚本回落 DISPLAY_NAME。
-      # 引用上下文默认开启：只展出被引用消息的原文，群友 ID / 昵称一律匿名。
-      # 只改文案不改数据时，定时任务因 data/ 无 diff 不会重新部署，需手动 Run workflow。
-      - name: Build view
-        env:
-          DISPLAY_NAME: Terry
-          DISPLAY_NAME_ZH_CN: ${{ secrets.DISPLAY_NAME_ZH_CN }}
-          DISPLAY_NAME_ZH_TW: ${{ secrets.DISPLAY_NAME_ZH_TW }}
-          DISPLAY_NAME_EN: ${{ secrets.DISPLAY_NAME_EN }}
-          INCLUDE_CONTEXT: "1"
-          ANONYMIZE_CONTEXT: "1"
-        run: python scripts/build_view.py
-
-      # ---- 3. 只提交事实源（含目标用户图片），dist/ 由 .gitignore 排除 ----
+      # 只提交事实源（含目标用户图片），dist/ 由 .gitignore 排除
       - name: Commit raw data
         id: git_check
         run: |
-          mkdir -p data dist
+          mkdir -p data
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           # 不带 pathspec：目录为空时也不会报 "did not match any files"
@@ -103,35 +91,66 @@ jobs:
             git push
             echo "has_changes=true" >> "$GITHUB_OUTPUT"
           fi
+          echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-      # ---- 4. 只发布 dist/，raw 全群数据不进站点产物 ----
+  # ---- 2. 展示投影并上传 Pages 产物：纯 Python 标准库，无需 pip install ----
+  build:
+    needs: sync
+    # 本地 push 时 sync 会被 skipped，必须用 !cancelled() 覆盖默认的 success() 检查
+    if: >-
+      !cancelled() && (
+        github.event_name == 'push' ||
+        (needs.sync.result == 'success' && (needs.sync.outputs.has_changes == 'true' || github.event_name == 'workflow_dispatch'))
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+    steps:
+      # sync 刚 push 了新 commit 时，github.sha 仍指向触发前的旧提交，必须按 commit_sha 检出最新数据
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.sync.outputs.commit_sha || github.sha }}
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v6
+
+      # 从 raw 重算，改规则不用重抓；i18n.json 只翻译界面文案，在此做三语键一致性校验。
+      # 站点名可按语言覆盖；未配置的 Secret 为空串，脚本回落 DISPLAY_NAME。
+      # 引用上下文默认开启：只展出被引用消息的原文，群友 ID / 昵称一律匿名。
+      - name: Build view
+        env:
+          DISPLAY_NAME: Terry
+          DISPLAY_NAME_ZH_CN: ${{ secrets.DISPLAY_NAME_ZH_CN }}
+          DISPLAY_NAME_ZH_TW: ${{ secrets.DISPLAY_NAME_ZH_TW }}
+          DISPLAY_NAME_EN: ${{ secrets.DISPLAY_NAME_EN }}
+          INCLUDE_CONTEXT: "1"
+          ANONYMIZE_CONTEXT: "1"
+        run: python3 scripts/build_view.py
+
+      # 只发布 dist/，raw 全群数据不进站点产物
       - name: Upload Pages artifact
-        if: steps.git_check.outputs.has_changes == 'true' || github.event_name == 'workflow_dispatch'
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: dist
 
-      # deploy-pages@v4 只查一次 artifact 列表且没有重试：实测 upload 成功后
-      # 0.3~0.5s 内查询仍可能返回 0 个，导致部署随机失败（Found 0 artifact(s)）。
-      # 这里轮询到 REST API 真正可见再放行，彻底消除这个竞态。
-      - name: Wait for Pages artifact
-        if: steps.git_check.outputs.has_changes == 'true' || github.event_name == 'workflow_dispatch'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          for i in $(seq 1 30); do
-            if gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts" \
-                --jq '.artifacts[]?.name' | grep -qx 'github-pages'; then
-              echo "github-pages artifact is visible"
-              exit 0
-            fi
-            echo "artifact not visible yet ($i/30), retry in 2s"
-            sleep 2
-          done
-          echo "::error::github-pages artifact did not become visible in time"
-          exit 1
-
+  # ---- 3. 独立部署 Job：与上传跨 Job 隔离，避开 artifact 最终一致性竞态，且支持安全 Re-run ----
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages-deploy
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
-        if: steps.git_check.outputs.has_changes == 'true' || github.event_name == 'workflow_dispatch'
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
