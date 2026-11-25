@@ -28,6 +28,8 @@ services:
     image: tg-service:latest
     container_name: tg-service
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
     env_file:
       - .env
     volumes:
@@ -35,6 +37,19 @@ services:
     depends_on:
       mihomo:
         condition: service_healthy
+    networks:
+      - tg-internal
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: tg-cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN}
+      TUNNEL_TRANSPORT_PROTOCOL: http2
+    depends_on:
+      - tg-service
     networks:
       - tg-internal
 
@@ -51,6 +66,7 @@ PUBLIC_URL=https://alerts.example.com
 PAGES_URL=https://yourname.github.io
 HOST=0.0.0.0
 PORT=3000
+TUNNEL_TOKEN=your_cloudflare_tunnel_token
 DATABASE_PATH=data/service/service.db
 IMAGE_DIR=data/service/images
 TOKEN_SECRET=replace_with_at_least_32_random_characters

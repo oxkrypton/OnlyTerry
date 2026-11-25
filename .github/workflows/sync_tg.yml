@@ -1,35 +1,25 @@
-name: Sync Telegram & Deploy Pages
+name: Sync Telegram
 
 on:
   schedule:
     # 每小时 19、49 分各一次；cron 按 UTC 计算，UTC+8 整点偏移不改变分钟数
     - cron: '19,49 * * * *'
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - 'frontend/**'
-      - 'scripts/build_view.py'
-      - 'data/**'
 
 permissions:
   contents: read
 
 jobs:
-  # ---- 1. 事实源同步：仅定时或手动触发，本地 push 自动跳过 ----
+  # 事实源同步：定时或手动触发，有新数据时触发 deploy_pages.yml 构建并部署
   sync:
-    if: github.event_name != 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
       contents: write
+      actions: write
     concurrency:
       group: tg-sync
       cancel-in-progress: false
-    outputs:
-      has_changes: ${{ steps.git_check.outputs.has_changes }}
-      commit_sha: ${{ steps.git_check.outputs.commit_sha }}
     # 两个话题共用同一账号凭证；WAIT_TIME 不注入（脚本无空串兜底，保持默认 1）
     env:
       TG_API_ID: ${{ secrets.TG_API_ID }}
@@ -91,66 +81,11 @@ jobs:
             git push
             echo "has_changes=true" >> "$GITHUB_OUTPUT"
           fi
-          echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-  # ---- 2. 展示投影并上传 Pages 产物：纯 Python 标准库，无需 pip install ----
-  build:
-    needs: sync
-    # 本地 push 时 sync 会被 skipped，必须用 !cancelled() 覆盖默认的 success() 检查
-    if: >-
-      !cancelled() && (
-        github.event_name == 'push' ||
-        (needs.sync.result == 'success' && (needs.sync.outputs.has_changes == 'true' || github.event_name == 'workflow_dispatch'))
-      )
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-      pages: write
-    steps:
-      # sync 刚 push 了新 commit 时，github.sha 仍指向触发前的旧提交，必须按 commit_sha 检出最新数据
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          ref: ${{ needs.sync.outputs.commit_sha || github.sha }}
-
-      - name: Configure Pages
-        uses: actions/configure-pages@v6
-
-      # 从 raw 重算，改规则不用重抓；i18n.json 只翻译界面文案，在此做三语键一致性校验。
-      # 站点名可按语言覆盖；未配置的 Secret 为空串，脚本回落 DISPLAY_NAME。
-      # 引用上下文默认开启：只展出被引用消息的原文，群友 ID / 昵称一律匿名。
-      - name: Build view
+      # 默认 GITHUB_TOKEN 的 git push 不会触发其他 workflow 的 on: push（防递归），
+      # 因此有新数据时显式发 workflow_dispatch 触发 deploy_pages.yml（需 actions: write）。
+      - name: Trigger Pages build & deploy
+        if: steps.git_check.outputs.has_changes == 'true'
         env:
-          DISPLAY_NAME: Terry
-          DISPLAY_NAME_ZH_CN: ${{ secrets.DISPLAY_NAME_ZH_CN }}
-          DISPLAY_NAME_ZH_TW: ${{ secrets.DISPLAY_NAME_ZH_TW }}
-          DISPLAY_NAME_EN: ${{ secrets.DISPLAY_NAME_EN }}
-          INCLUDE_CONTEXT: "1"
-          ANONYMIZE_CONTEXT: "1"
-        run: python3 scripts/build_view.py
-
-      # 只发布 dist/，raw 全群数据不进站点产物
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v5
-        with:
-          path: dist
-
-  # ---- 3. 独立部署 Job：与上传跨 Job 隔离，避开 artifact 最终一致性竞态，且支持安全 Re-run ----
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      pages: write
-      id-token: write
-    concurrency:
-      group: pages-deploy
-      cancel-in-progress: false
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v5
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run deploy_pages.yml --repo "${{ github.repository }}" --ref main

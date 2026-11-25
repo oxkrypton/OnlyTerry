@@ -1,0 +1,69 @@
+name: Build & Deploy Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'data/**'
+      - 'frontend/**'
+      - 'scripts/build_view.py'
+      - '.github/workflows/deploy_pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: false
+
+jobs:
+  # ---- 1. 展示投影并上传 Pages 产物：纯 Python 标准库，无需 pip install ----
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v6
+
+      # 从 raw 重算，改规则不用重抓；i18n.json 只翻译界面文案，在此做三语键一致性校验。
+      # 站点名可按语言覆盖；未配置的 Secret 为空串，脚本回落 DISPLAY_NAME。
+      # 引用上下文默认开启：只展出被引用消息的原文，群友 ID / 昵称一律匿名。
+      - name: Build view
+        env:
+          DISPLAY_NAME: Terry
+          DISPLAY_NAME_ZH_CN: ${{ secrets.DISPLAY_NAME_ZH_CN }}
+          DISPLAY_NAME_ZH_TW: ${{ secrets.DISPLAY_NAME_ZH_TW }}
+          DISPLAY_NAME_EN: ${{ secrets.DISPLAY_NAME_EN }}
+          INCLUDE_CONTEXT: "1"
+          ANONYMIZE_CONTEXT: "1"
+        run: python3 scripts/build_view.py
+
+      # 只发布 dist/，raw 全群数据不进站点产物
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  # ---- 2. 独立部署 Job：build 成功后自动触发，无上游 skipped 依赖 ----
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
