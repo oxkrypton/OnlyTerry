@@ -34,6 +34,19 @@ services:
     networks:
       - tg-internal
 
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: tg-cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN}
+      TUNNEL_TRANSPORT_PROTOCOL: http2
+    depends_on:
+      - tg-service
+    networks:
+      - tg-internal
+
 networks:
   tg-internal:
     driver: bridge

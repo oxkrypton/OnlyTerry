@@ -14,7 +14,7 @@
         try { sessionStorage.setItem(BELL_DOT_KEY, '1'); } catch (e) { }
       }
       /* 订阅 API：与服务端 .env 的 PUBLIC_URL 一致，部署改域名时只需改这一行 */
-      var SUBSCRIBE_API = 'https://api.terry.ronyu.me:8443/api/subscriptions';
+      var SUBSCRIBE_API = 'https://terry-api.ronyu.me/api/subscriptions';
       /* 服务端要求至少一个合法频道；归档站只提供订阅入口，默认订阅全部频道 */
       var SUBSCRIBE_CHANNELS = ['us_stocks', 'crypto'];
       var PAGE_SIZE = 30;
