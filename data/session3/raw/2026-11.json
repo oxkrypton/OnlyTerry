@@ -65777,5 +65777,33 @@
     "reply_to_msg_id": null,
     "reply_quote": null,
     "deleted": false
+  },
+  {
+    "id": 161461,
+    "date": "2026-11-25T16:10:31+00:00",
+    "date_local": "2026-11-26T00:10:31+08:00",
+    "month": "2026-11",
+    "sender_id": 643213831,
+    "text": "全去買美債了",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 161462,
+    "date": "2026-11-25T16:11:05+00:00",
+    "date_local": "2026-11-26T00:11:05+08:00",
+    "month": "2026-11",
+    "sender_id": 643213831,
+    "text": "十年期收益率直接回到九月初",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
   }
 ]
