@@ -62977,5 +62977,61 @@
     "reply_to_msg_id": 161129,
     "reply_quote": null,
     "deleted": false
+  },
+  {
+    "id": 161133,
+    "date": "2026-11-25T05:34:02+00:00",
+    "date_local": "2026-11-25T13:34:02+08:00",
+    "month": "2026-11",
+    "sender_id": 643213831,
+    "text": "這個行情，減倉做現金管理是合理的",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 161134,
+    "date": "2026-11-25T05:34:19+00:00",
+    "date_local": "2026-11-25T13:34:19+08:00",
+    "month": "2026-11",
+    "sender_id": 643213831,
+    "text": "減倉≠長期不看好",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 161141,
+    "date": "2026-11-25T06:04:03+00:00",
+    "date_local": "2026-11-25T14:04:03+08:00",
+    "month": "2026-11",
+    "sender_id": 1314580739,
+    "text": "出張嘴",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": 161113,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 161142,
+    "date": "2026-11-25T06:16:53+00:00",
+    "date_local": "2026-11-25T14:16:53+08:00",
+    "month": "2026-11",
+    "sender_id": 8215188602,
+    "text": "最近又想加仓了，位置好吗qqq和sp，最近看迷糊了",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
   }
 ]
