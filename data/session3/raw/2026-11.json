@@ -66967,5 +66967,19 @@
     "reply_to_msg_id": null,
     "reply_quote": null,
     "deleted": false
+  },
+  {
+    "id": 161975,
+    "date": "2026-11-27T15:39:25+00:00",
+    "date_local": "2026-11-27T23:39:25+08:00",
+    "month": "2026-11",
+    "sender_id": 151363760,
+    "text": "@hackbearterry 你大約在什麼位置減倉TSLA",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
   }
 ]

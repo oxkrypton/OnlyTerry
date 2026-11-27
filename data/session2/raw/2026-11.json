@@ -2408,6 +2408,6 @@
     "grouped_id": null,
     "reply_to_msg_id": null,
     "reply_quote": null,
-    "deleted": false
+    "deleted": true
   }
 ]
