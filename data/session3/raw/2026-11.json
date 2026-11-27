@@ -66729,5 +66729,33 @@
     "reply_to_msg_id": 161886,
     "reply_quote": null,
     "deleted": false
+  },
+  {
+    "id": 161913,
+    "date": "2026-11-27T04:35:05+00:00",
+    "date_local": "2026-11-27T12:35:05+08:00",
+    "month": "2026-11",
+    "sender_id": 5724046889,
+    "text": "QQQ盤前2趴多🥰😍",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 161914,
+    "date": "2026-11-27T04:35:13+00:00",
+    "date_local": "2026-11-27T12:35:13+08:00",
+    "month": "2026-11",
+    "sender_id": 5724046889,
+    "text": "感恩節行情？",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
   }
 ]
