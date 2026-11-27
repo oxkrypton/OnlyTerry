@@ -66841,5 +66841,33 @@
     "reply_to_msg_id": null,
     "reply_quote": null,
     "deleted": false
+  },
+  {
+    "id": 161932,
+    "date": "2026-11-27T08:12:42+00:00",
+    "date_local": "2026-11-27T16:12:42+08:00",
+    "month": "2026-11",
+    "sender_id": 8628025959,
+    "text": "你確定上証是可以做多...",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 161933,
+    "date": "2026-11-27T08:46:15+00:00",
+    "date_local": "2026-11-27T16:46:15+08:00",
+    "month": "2026-11",
+    "sender_id": 5447909601,
+    "text": "大方向而已，機構的角度都是全球佈局的，散戶玩玩美股就好了，其他市場玩不起",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": 161932,
+    "reply_quote": null,
+    "deleted": false
   }
 ]
