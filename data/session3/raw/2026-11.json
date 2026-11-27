@@ -66757,5 +66757,47 @@
     "reply_to_msg_id": null,
     "reply_quote": null,
     "deleted": false
+  },
+  {
+    "id": 161918,
+    "date": "2026-11-27T05:30:22+00:00",
+    "date_local": "2026-11-27T13:30:22+08:00",
+    "month": "2026-11",
+    "sender_id": 1801190829,
+    "text": "有",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": 161889,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 161919,
+    "date": "2026-11-27T05:30:43+00:00",
+    "date_local": "2026-11-27T13:30:43+08:00",
+    "month": "2026-11",
+    "sender_id": 1801190829,
+    "text": "用 AI 🤨",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": 161887,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 161920,
+    "date": "2026-11-27T06:00:12+00:00",
+    "date_local": "2026-11-27T14:00:12+08:00",
+    "month": "2026-11",
+    "sender_id": 643213831,
+    "text": "上證今天漲了三個多點😂",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
   }
 ]
