@@ -66911,5 +66911,61 @@
     "reply_to_msg_id": 161920,
     "reply_quote": null,
     "deleted": false
+  },
+  {
+    "id": 161971,
+    "date": "2026-11-27T14:42:42+00:00",
+    "date_local": "2026-11-27T22:42:42+08:00",
+    "month": "2026-11",
+    "sender_id": 6439472832,
+    "text": "开盘动能不足啊",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 161972,
+    "date": "2026-11-27T14:48:21+00:00",
+    "date_local": "2026-11-27T22:48:21+08:00",
+    "month": "2026-11",
+    "sender_id": 6837675784,
+    "text": "什么情况？追高的又死翘翘了吧",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 161973,
+    "date": "2026-11-27T14:49:49+00:00",
+    "date_local": "2026-11-27T22:49:49+08:00",
+    "month": "2026-11",
+    "sender_id": 1212282084,
+    "text": "盤前漲2%又沒了",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 161974,
+    "date": "2026-11-27T14:52:52+00:00",
+    "date_local": "2026-11-27T22:52:52+08:00",
+    "month": "2026-11",
+    "sender_id": 5047609148,
+    "text": "今天机构都放假了 没什么参考价值 大方向周一再看吧",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
   }
 ]
