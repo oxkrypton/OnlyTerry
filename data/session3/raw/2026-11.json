@@ -66658,7 +66658,7 @@
     "grouped_id": null,
     "reply_to_msg_id": null,
     "reply_quote": null,
-    "deleted": false
+    "deleted": true
   },
   {
     "id": 161884,
@@ -66671,6 +66671,62 @@
     "media_type": null,
     "grouped_id": null,
     "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": true
+  },
+  {
+    "id": 161886,
+    "date": "2026-11-26T19:46:05+00:00",
+    "date_local": "2026-11-27T03:46:05+08:00",
+    "month": "2026-11",
+    "sender_id": 6353907088,
+    "text": "@AllenLiBoy 我用了Terry連結開IB，但沒有獎勵拎取，是什麼原因呢？",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 161887,
+    "date": "2026-11-26T19:58:42+00:00",
+    "date_local": "2026-11-27T03:58:42+08:00",
+    "month": "2026-11",
+    "sender_id": 1156416986,
+    "text": "Terry 有對檢查公司債務違約風險嘅方法嗎？",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 161889,
+    "date": "2026-11-26T22:12:52+00:00",
+    "date_local": "2026-11-27T06:12:52+08:00",
+    "month": "2026-11",
+    "sender_id": 6024424580,
+    "text": "IBKR如果加拿大开户 有没有新手奖励？",
+    "media": null,
+    "media_type": null,
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
+  },
+  {
+    "id": 161896,
+    "date": "2026-11-26T23:37:34+00:00",
+    "date_local": "2026-11-27T07:37:34+08:00",
+    "month": "2026-11",
+    "sender_id": 5678341267,
+    "text": "要記得填寫表單，以及我們會在活動結束後發放哦～\nhttps://www.alphalab.site/ib-referral\n\nIBKR 官方最高 US$1,000 的新戶推薦獎勵計畫，詳如下：\nhttps://forms.gle/AF63JpPsgagRB2BE9",
+    "media": null,
+    "media_type": "photo",
+    "grouped_id": null,
+    "reply_to_msg_id": 161886,
     "reply_quote": null,
     "deleted": false
   }
