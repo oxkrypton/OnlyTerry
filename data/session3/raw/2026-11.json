@@ -67023,5 +67023,19 @@
     "reply_to_msg_id": null,
     "reply_quote": null,
     "deleted": false
+  },
+  {
+    "id": 162016,
+    "date": "2026-11-27T19:23:50+00:00",
+    "date_local": "2026-11-28T03:23:50+08:00",
+    "month": "2026-11",
+    "sender_id": 589159139,
+    "text": "MU 2010年佈局一萬股 總成本78000 哈哈爽 @everyone",
+    "media": null,
+    "media_type": "photo",
+    "grouped_id": null,
+    "reply_to_msg_id": null,
+    "reply_quote": null,
+    "deleted": false
   }
 ]
